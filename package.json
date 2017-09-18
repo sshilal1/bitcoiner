@@ -1,0 +1,11 @@
+{
+  "name": "bitcoiner",
+  "version": "1.0.0",
+  "description": "Simple backend app to buy and sell bitcoins",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stephen Shilale",
+  "license": "ISC"
+}
