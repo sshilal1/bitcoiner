@@ -1,9 +1,10 @@
 const coinbase = require('coinbase');
+const api = require('./api');
 
 const apiURI = 'https://api.gdax.com';
-const coinbaseURI = 'https://api.coinbase.com/v2/users/:' + accountID;
+const coinbaseURI = 'https://api.coinbase.com/v2/users/:' + api.acctId;
 
-var client   = new coinbase.Client({'apiKey': key, 'apiSecret': b64secret});
+var client   = new coinbase.Client({'apiKey': api.key, 'apiSecret': api.secret});
 
 client.getAccounts({}, function(err, accounts) {
   accounts.forEach(function(acct) {
