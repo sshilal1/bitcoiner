@@ -4,3 +4,4 @@ dist/bundle.js
 yarn.lock
 *.trace
 npm-debug.log
+api.js
