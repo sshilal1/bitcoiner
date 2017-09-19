@@ -13,4 +13,14 @@ const apiURI = 'https://api.gdax.com';
 const callback = (err, response, data) => { console.log(data) }; 
 
 const authedClient = new Gdax.AuthenticatedClient(api.gdax.key, api.gdax.secret, api.gdax.pass, apiURI);
-authedClient.getAccounts(callback);
+//authedClient.getAccounts(callback);
+
+const buyParams = {
+  'price': '4027.4', // USD
+  'size': '.01',  // BTC
+  'product_id': 'BTC-USD',
+};
+//authedClient.buy(buyParams, callback);
+
+authedClient.getOrders(callback);
+//authedClient.cancelAllOrders({product_id: 'BTC-USD'}, callback);
