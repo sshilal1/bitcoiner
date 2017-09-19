@@ -9,6 +9,7 @@
   "author": "Stephen Shilale",
   "license": "ISC",
   "dependencies": {
+    "coinbase": "^2.0.6",
     "gdax": "^0.4.2"
   }
 }
