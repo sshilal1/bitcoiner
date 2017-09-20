@@ -42,6 +42,8 @@ var authClient = function(interval) {
 	const ethClient = new Gdax.PublicClient('ETH-USD');
 	const ltcClient = new Gdax.PublicClient('LTC-USD');
 
+	this.orders = '120';
+
 	this.returnData = function(d) { return d; };
 
 	this.listenTicks = function(interval) {
@@ -62,20 +64,20 @@ var authClient = function(interval) {
 	}
 
 	this.getBtcOrders = function() {
-		btcClient.getProductOrderBook(function(err, response, data) {
-			//console.log(data);
-			letsReturn(data);
+		var ok = btcClient.getProductOrderBook(function(err, response, data) {
+			return data;
 		});
 	}
 
 	this.getBtcProducts = function() {
-		btcClient.getProducts()
-			.then(data => {
-				letsReturn(data);
-			})
-			.catch(error => {
-				return error;
-			})
+		var myData;
+		return btcClient.getProducts()
+		.then(data => {
+			myData = data;
+		})
+		.then(function() {
+			return myData;
+		})
 	}
 }
 
