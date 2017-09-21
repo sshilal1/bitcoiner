@@ -11,10 +11,11 @@ app.get('/', function (req, res) {
 
 var client = new GdaxClient.authClient(2000);
 
-app.get('/data', function(req, res) {
-	client.getBtcOrders(function(data) {
-		res.send(data);
-	});
+app.get('/btcOrders', function(req, res) {
+	client.getBtcOrders(function(data) { res.send(data) });
+})
+app.get('/accounts', function(req, res) {
+	client.getAccounts(function(data) { res.send(data) });
 })
 
 http.listen(3000, function(){
