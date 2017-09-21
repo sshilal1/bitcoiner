@@ -64,10 +64,6 @@ var authClient = function(interval) {
 		},interval);
 	}
 
-	this.haha = function(data) {
-		return data;
-	}
-
 	this.getAccounts = function(callback) {
 		authedClient.getAccounts(function(err, response, data) {
 			callback(data);
@@ -85,6 +81,18 @@ var authClient = function(interval) {
 	}
 	this.getAccountHolds = function(callback) {
 		authedClient.getAccountHolds(api.acctId, function(err, response, data) {
+			callback(data);
+		});
+	}
+	this.getOrders = function(callback) {
+		authedClient.getOrders(function(err, response, data) {
+			callback(data);
+		});
+	}
+	// reqs order id from getOrders
+	const orderID = 'd50ec984-77a8-460a-b958-66f114b0de9b';
+	this.getOrder = function(callback) {
+		authedClient.getOrder(orderID, function(err, response, data) {
 			callback(data);
 		});
 	}
