@@ -41,8 +41,9 @@ var authClient = function(interval) {
 	const btcClient = new Gdax.PublicClient('BTC-USD');
 	const ethClient = new Gdax.PublicClient('ETH-USD');
 	const ltcClient = new Gdax.PublicClient('LTC-USD');
+	const authedClient = new Gdax.AuthenticatedClient(api.gdax.key, api.gdax.secret, api.gdax.pass, apiURI);
 
-	this.orders = '120';
+	btcClient.getCoinbaseAccounts
 
 	this.returnData = function(d) { return d; };
 
@@ -67,6 +68,26 @@ var authClient = function(interval) {
 		return data;
 	}
 
+	this.getAccounts = function(callback) {
+		authedClient.getAccounts(function(err, response, data) {
+			callback(data);
+		});
+	}
+	this.getAccount = function(callback) {
+		authedClient.getAccount(api.acctId, function(err, response, data) {
+			callback(data);
+		});
+	}
+	this.getAccountHistory = function(callback) {
+		authedClient.getAccountHistory(api.acctId, function(err, response, data) {
+			callback(data);
+		});
+	}
+	this.getAccountHolds = function(callback) {
+		authedClient.getAccountHolds(api.acctId, function(err, response, data) {
+			callback(data);
+		});
+	}
 	this.getBtcOrders = function(callback) {
 		btcClient.getProductOrderBook(function(err, response, data) {
 			callback(data);
