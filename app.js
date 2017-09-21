@@ -12,9 +12,12 @@ app.get('/', function (req, res) {
 var client = new GdaxTicker.authClient(2000);
 
 app.get('/data', function(req, res) {
-	var orders = client.getBtcOrders();
-	console.log("orders: ",orders);
-	res.send(orders);
+	var orders = client.getBtcOrders(function(data) {
+		console.log(data);
+		res.send(data);
+	});
+	//console.log("orders: ",orders);
+	
 })
 
 http.listen(3000, function(){

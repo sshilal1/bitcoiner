@@ -63,21 +63,14 @@ var authClient = function(interval) {
 		},interval);
 	}
 
-	this.getBtcOrders = function() {
-		var ok = btcClient.getProductOrderBook(function(err, response, data) {
-			return data;
-		});
+	this.haha = function(data) {
+		return data;
 	}
 
-	this.getBtcProducts = function() {
-		var myData;
-		return btcClient.getProducts()
-		.then(data => {
-			myData = data;
-		})
-		.then(function() {
-			return myData;
-		})
+	this.getBtcOrders = function(callback) {
+		btcClient.getProductOrderBook(function(err, response, data) {
+			callback(data);
+		});
 	}
 }
 
