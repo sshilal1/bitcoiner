@@ -6,6 +6,19 @@ $( '#btcOrders' ).click(function() {
 });
 $( '#accounts' ).click(function() {
   $.get( "/accounts", function( data ) {
-    console.log(data);
+  	for (var acct of data) {
+  		createAcct(acct);
+  	}
   });
 });
+$.get( "/accounts", function( data ) {
+	for (var acct of data) {
+		createAcct(acct);
+	}
+});
+
+function createAcct(acct) {
+	var div = '<div><div class="flex-row"><div>Acct: </div><div class="acct-title">' + acct.currency + '</div></div>';
+	div += '<div class="flex-row"><div>Balance: </div><div class="acct-title">' + acct.balance + '</div></div></div>';
+	$('#accts').append(div);
+}

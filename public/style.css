@@ -5,3 +5,7 @@
 	border-color: lightgrey;
 	border-style: solid;
 }
+.flex-row{
+	display: flex;
+	flex-direction: row;
+}
