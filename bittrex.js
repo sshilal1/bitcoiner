@@ -2,7 +2,7 @@ const request = require("request-promise");
 
 var markets = [];
 var dailyVolume = 10000000;
-var btcValue = 3904;
+var btcValue;
 
 request('https://bittrex.com/api/v1.1/public/getticker?market=usdt-btc')
 .then( function(data) {
