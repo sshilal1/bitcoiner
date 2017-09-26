@@ -41,12 +41,36 @@ request('https://bittrex.com/api/v1.1/public/getticker?market=usdt-btc')
 	})
 })
 */
-var bittrexClient = function(interval,dailyVolume,buyThreshold,sellThreshold) {
+var bittrexClient = function(dailyVolume,buyThreshold,sellThreshold) {
 
 	this.getTicker = function(market,callback) {
 		var uri = 'https://bittrex.com/api/v1.1/public/getticker?market=' + market;
 		request(uri, function(err, res, data) {
 			callback(JSON.parse(data));
+		})
+	}
+
+	this.getMarketSummaries = function(btcValue,callback) {
+		request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
+		.then( function(data) {
+			var json = JSON.parse(data);
+			for (var market of json.result) {
+				// If BTC market, lets report volume in BTC
+				var volume = market.MarketName.startsWith("BTC") ? (market.BaseVolume * btcValue) : (market.BaseVolume);
+				// If market volume is more than our requested, lets add this market to our query
+				if (volume > dailyVolume) {
+					var obj = {
+						name: market.MarketName,
+						volume: volume,
+						last: market.Last
+					};
+					markets.push(obj);
+				}
+			}
+		})
+		.then( function() {
+			markets.sort(function(a,b) { return b.volume - a.volume })
+			callback(markets);
 		})
 	}
 }

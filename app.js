@@ -12,8 +12,10 @@ app.get('/', function (req, res) {
 	res.sendFile('index.html', { root : __dirname });
 })
 
+/***
+GDAX
+****/
 var gdaxClient = new GdaxClient.authClient(2000);
-var bittrexClient = new Bittrex.bittrexClient(60000,1000000,10,20);
 
 app.get('/btcOrders', function(req, res) {
 	gdaxClient.getBtcOrders(function(data) { res.send(data) });
@@ -21,11 +23,41 @@ app.get('/btcOrders', function(req, res) {
 app.get('/accounts', function(req, res) {
 	gdaxClient.getAccounts(function(data) { res.send(data) });
 })
-app.get('/ticker', function(req,res) {
+
+/******
+BITTREX
+*******/
+// Start a few clients to compare
+var recordInterval = 60000 * 5; // 5 minutes
+var bittrexClient = new Bittrex.bittrexClient(1000000,10,25);
+var bcTen = {};
+
+setInterval(function() {
 	bittrexClient.getTicker('usdt-btc', function(data) {
+		bcTen.btcValue = data.result.Last;
+		bittrexClient.getMarketSummaries(bcTen.btcValue, function(markets) {
+			if (!bcTen.markets)
+			for (let m=0; m<markets.length; m++) {
+
+			}
+			bittrexClient.getPercentIncrease(markets, function(updatedMarkets) {
+				bcTen.markets = updatedMarkets;
+			})
+		})
+	})
+	console.log(bcTen.markets);
+}, 1000);
+
+
+
+
+
+app.get('/ticker', function(req,res) {
+	bittrexClientTen.getTicker('usdt-btc', function(data) {
 		res.send(data);
 	})
 })
+
 app.get('/print', function(req,res) {
 	// Create a new instance of a Workbook class 
 	var wb = new xl.Workbook();
