@@ -1,7 +1,7 @@
 const request = require("request-promise");
 
 var markets = [];
-var dailyVolume = 10000000;
+var dailyVolume = 1000000;
 var btcValue;
 
 request('https://bittrex.com/api/v1.1/public/getticker?market=usdt-btc')
@@ -24,7 +24,8 @@ request('https://bittrex.com/api/v1.1/public/getticker?market=usdt-btc')
 			if (volum > dailyVolume) {
 				var obj = {
 					name: market.MarketName,
-					volume: volum
+					volume: volum,
+					last: market.Last
 				};
 				markets.push(obj);
 			}
