@@ -11,10 +11,10 @@ $( '#accounts' ).click(function() {
   	}
   });
 });
-$.get( "/accounts", function( data ) {
-	for (var acct of data) {
-		createAcct(acct);
-	}
+$( '#ticker' ).click(function() {
+  $.get( "/ticker", function( data ) {
+    console.log(data);
+  });
 });
 
 function createAcct(acct) {
