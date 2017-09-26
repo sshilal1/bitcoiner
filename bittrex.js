@@ -4,7 +4,14 @@ var markets = [];
 var dailyVolume = 10000000;
 var btcValue = 3904;
 
-request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
+request('https://bittrex.com/api/v1.1/public/getticker?market=usdt-btc')
+.then( function(data) {
+	var btc = JSON.parse(data);
+	btcValue = btc.result.Last;
+	console.log("Btc Value:", btcValue);
+})
+.then(function() {
+	request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
 	.then( function(data) {
 		var json = JSON.parse(data);
 		for (var market of json.result) {
@@ -27,3 +34,4 @@ request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
 		markets.sort(function(a,b) { return b.volume - a.volume })
 		console.log(markets);
 	})
+})
