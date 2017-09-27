@@ -12,6 +12,35 @@ var bittrexClient = function(dailyVolume) {
 		})
 	}
 
+	this.getAverageTicker = function(market,callback) {
+		var uri = 'https://bittrex.com/api/v1.1/public/getticker?market=' + market;
+		var timesRun = 0;
+		var ticks = [];
+		var interval = setInterval(function(){
+			timesRun += 1;
+			if (timesRun === 3) {
+				var sum = 0;
+				for (var i = 0; i < ticks.length; i++) {
+					sum += parseInt(ticks[i], 10);
+				}
+				var avg = sum / ticks.length;
+				callback(avg);
+				clearInterval(interval);
+			}
+			else {
+				request(uri)
+				.then(function(data) {
+					var json = JSON.parse(data);
+					ticks.push(json.result.Last);
+				})
+			}
+		},1000)
+
+		request(uri, function(err, res, data) {
+			callback(JSON.parse(data));
+		})
+	}
+
 	this.getMarketSummaries = function(btcValue,callback) {
 		request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
 		.then( function(data) {

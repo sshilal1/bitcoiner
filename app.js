@@ -1,7 +1,18 @@
+// --------------------
+// User input variables
+// --------------------
+// Percent increase threshold to BUY at
 const buyThreshold = 1;
+// Percent increase threshold to SELL at
 const sellThreshold = 4;
-const recordInterval = 60000 * 5; // 5 minutes
-
+// How often to check ticks, default 3 seconds (3000 ms)
+const recordInterval = 3000;
+// How many times to loop during sanity check
+const sanityLoops = 4;
+// How many seconds (ms) between loop during sanity check
+const sanityMs = 1000;
+// --------------------
+// --------------------
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -57,10 +68,48 @@ function pDiff(market) {
 }
 
 function buying(market) {
+	// Lets do a sanity check for few seconds make sure it wasnt a fluke
+	var timesRun = 0;
+	var sanity = false;
+	var ticks = [];
+
 	runner.notes[market.name] = [];
-	runner.notes[market.name].push("Buying at " + market.last + ": " + market.change + "% change");
-	runner.bought.push(market.name);
-	logger.log('info', "Monitoring On...");
+	runner.notes[market.name].push("Checking sanity for buying " + market.name);
+	var interval = setInterval(function(){
+		timesRun += 1;
+		if(timesRun === sanityLoops){
+			if (checkSanity(market.start,ticks)) {
+				var logStr = "Buying at " + market.last + ": " + market.change + "% change";
+				logger.log('info', logStr);
+				runner.notes[market.name].push(logStr);
+				runner.bought.push(market.name);
+			}
+			else {
+				console.log("Not buying, was a fluke");
+			}
+
+			clearInterval(interval);
+		}
+		else {
+			bittrexApi.getTicker(market.name, function(data) {
+				ticks.push(data.result.Last);
+				console.log(`Ticks for ${market.name}`, ticks);
+			})
+		}
+	}, sanityMs);
+}
+
+function checkSanity(start,ticks) {
+	var sum = 0;
+	for (var i = 0; i < ticks.length; i++) {
+		sum += parseInt(ticks[i], 10);
+	}
+	var avg = sum / ticks.length;
+	var change = (((start - avg) * 100)/start).toFixed(2);
+	if (change > buyThreshold) {
+		return true;
+	}
+	else { return false; }
 }
 
 function selling(market) {
@@ -83,7 +132,9 @@ function monitorChange() {
 	},1000);
 }
 /****************
+// --------------
 Begin Application
+// --------------
 *****************/
 var bittrexApi = new Bittrex.bittrexClient(1000000);
 var runner = {
@@ -103,6 +154,13 @@ bittrexApi.getTicker('usdt-btc', function(data) {
 	})
 })
 
+setInterval(function() {
+	bittrexApi.getAverageTicker('usdt-btc', function(data) {
+		console.log("Average BTC: ", data);
+	})
+},5000);
+
+/*
 // Interval query
 setInterval(function() {
 	bittrexApi.getTicker('usdt-btc', function(data) {
@@ -135,11 +193,12 @@ setInterval(function() {
 		})
 	})
 	//logger.log('info', runner.markets);
-	logger.log('info', runner.notes);
-}, 3000);
+	//logger.log('info', runner.notes);
+}, recordInterval);
 
 // Kick off monitor function
 monitorChange();
+*/
 
 app.get('/print', function(req,res) {
 	// Create a new instance of a Workbook class 
