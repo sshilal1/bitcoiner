@@ -1,3 +1,6 @@
+const buyThreshold = .5;
+const recordInterval = 60000 * 5; // 5 minutes
+
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -28,38 +31,49 @@ function pDiff(market) {
 /******
 BITTREX
 *******/
-// Start a few clients to compare
-var recordInterval = 60000 * 5; // 5 minutes
-var bittrexClient = new Bittrex.bittrexClient(7000000,10,25);
-var bcTen = {
+var bittrexClient = new Bittrex.bittrexClient(1000000);
+var runner = {
 	btcValue : 0,
-	markets : {}
+	markets : {},
+	notes: []
 }
 
 // Initial gather
 bittrexClient.getTicker('usdt-btc', function(data) {
-	bcTen.btcValue = data.result.Last;
-	bittrexClient.getMarketSummaries(bcTen.btcValue, function(markets) {
-		bcTen.markets = markets;
-		console.log(bcTen.markets);
+	runner.btcValue = data.result.Last;
+	bittrexClient.getMarketSummaries(runner.btcValue, function(markets) {
+		runner.markets = markets;
+		console.log(runner.markets);
+		console.log("Monitoring " + Object.keys(runner.markets).length + " markets");
 	})
 })
 
 // Interval query
 setInterval(function() {
 	bittrexClient.getTicker('usdt-btc', function(data) {
+		
 		// Set BTC price
-		bcTen.btcValue = data.result.Last;
-		bittrexClient.getLatestTicks(bcTen.btcValue, function(ticks) {
+		runner.btcValue = data.result.Last;
+		
+		bittrexClient.getLatestTicks(runner.btcValue, function(ticks) {
 			for (var market in ticks) {
+				
 				// Calc % Increase
-				bcTen.markets[market].change = pDiff(bcTen.markets[market]);
+				runner.markets[market].change = pDiff(runner.markets[market]);
+
+				// If greater than threshold, buy
+				if (runner.markets[market].change > buyThreshold) {
+					var logStr = "Buying " + runner.markets[market].name + " at " + runner.markets[market].last;
+					runner.notes.push(logStr);
+				}
+				
 				// Set new Last
-				bcTen.markets[market].last = ticks[market].last;
+				runner.markets[market].last = ticks[market].last;
 			}
 		})
 	})
-	console.log(bcTen.markets);
+	//console.log(runner.markets);
+	console.log(runner.notes);
 }, 3000);
 
 app.get('/print', function(req,res) {
@@ -72,10 +86,9 @@ app.get('/print', function(req,res) {
 	    font: {
 	        color: '#FF0800',
 	        size: 12
-	    },
-	    numberFormat: '$#,##0.00; ($#,##0.00); -'
+	    }
 	});
-	 
+
 	// Set value of cell A1 to 100 as a number type styled with paramaters of style 
 	ws.cell(1,1).number(100).style(style);
 

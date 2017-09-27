@@ -3,7 +3,7 @@ const request = require("request-promise");
 var markets = {};
 var ticks = {};
 
-var bittrexClient = function(dailyVolume,buyThreshold,sellThreshold) {
+var bittrexClient = function(dailyVolume) {
 
 	this.getTicker = function(market,callback) {
 		var uri = 'https://bittrex.com/api/v1.1/public/getticker?market=' + market;
@@ -22,6 +22,7 @@ var bittrexClient = function(dailyVolume,buyThreshold,sellThreshold) {
 				// If market volume is more than our requested, lets add this market to our query
 				if (volume > dailyVolume) {
 					markets[market.MarketName] = {
+						name: market.MarketName,
 						start: market.Last,
 						last: market.Last
 					}
