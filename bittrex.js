@@ -84,4 +84,19 @@ var bittrexClient = function(dailyVolume) {
 	}
 }
 
+var trexClient = function(logger,dailyVolume,buyThreshold,sellThreshold,interval) {
+	var markets = [];
+	var btcValue = 0;
+
+	var BittrexClient = new bittrexClient(1000);
+
+	// In here we have access to all the functions from the below class (which will rename and export differenctly)
+	BittrexClient.getTicker('usdt-btc', function(data) {
+		btcValue = data.result.Last;
+		console.log(btcValue);
+	});
+}
+
+var myclient = new trexClient();
+
 module.exports = { bittrexClient };
