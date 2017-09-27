@@ -8,6 +8,21 @@ We throttle private endpoints by user ID: 5 requests per second, up to 10 reques
 NO LIMIT TO NUMBER OF TRADES
 ******/
 
+/***
+GDAX
+****/
+var gdaxClient = new GdaxClient.authClient(2000);
+
+app.get('/btcOrders', function(req, res) {
+	gdaxClient.getBtcOrders(function(data) { res.send(data) });
+})
+app.get('/accounts', function(req, res) {
+	gdaxClient.getAccounts(function(data) { res.send(data) });
+})
+/**********
+FROM APP.JS
+***********/
+
 const Gdax = require('gdax');
 const api = require('./api');
 
@@ -22,19 +37,6 @@ const buyParams = {
   'size': '.01',  // BTC
   'product_id': 'BTC-USD',
 };
-//authedClient.buy(buyParams, callback);
-
-//authedClient.getOrders(callback);
-//authedClient.cancelAllOrders({product_id: 'BTC-USD'}, callback);
-
-//authedClient.getProducts(callback);
-//authedClient.getCurrencies(callback);
-
-
-
-//btcClient.getProductTicker(callback);
-//ethClient.getProductTicker(callback);
-//ltcClient.getProductTicker(callback);
 
 var authClient = function(interval) {
 

@@ -3,26 +3,27 @@ var app = express();
 var http = require('http').Server(app);
 var xl = require('excel4node');
 
-var GdaxClient = require('./gdax-client.js');
 var Bittrex = require('./bittrex.js');
 
 app.use(express.static(__dirname + '/public'));
-
 app.get('/', function (req, res) {
 	res.sendFile('index.html', { root : __dirname });
 })
-
-/***
-GDAX
-****/
-var gdaxClient = new GdaxClient.authClient(2000);
-
-app.get('/btcOrders', function(req, res) {
-	gdaxClient.getBtcOrders(function(data) { res.send(data) });
+app.get('/ticker', function(req,res) {
+	bittrexClientTen.getTicker('usdt-btc', function(data) {
+		res.send(data);
+	})
 })
-app.get('/accounts', function(req, res) {
-	gdaxClient.getAccounts(function(data) { res.send(data) });
-})
+/*********
+HELPER FNs
+**********/
+// Finds the percent increase
+function pDiff(market) {
+	var first = market.start;
+	var second = market.last;
+	var result = (((first - second) * 100)/first);
+	return result.toFixed(3);
+}
 
 /******
 BITTREX
@@ -47,10 +48,13 @@ bittrexClient.getTicker('usdt-btc', function(data) {
 // Interval query
 setInterval(function() {
 	bittrexClient.getTicker('usdt-btc', function(data) {
+		// Set BTC price
 		bcTen.btcValue = data.result.Last;
 		bittrexClient.getLatestTicks(bcTen.btcValue, function(ticks) {
 			for (var market in ticks) {
-				//console.log(markets[ticker]);
+				// Calc % Increase
+				bcTen.markets[market].change = pDiff(bcTen.markets[market]);
+				// Set new Last
 				bcTen.markets[market].last = ticks[market].last;
 			}
 		})
@@ -58,20 +62,10 @@ setInterval(function() {
 	console.log(bcTen.markets);
 }, 3000);
 
-
-
-
-
-app.get('/ticker', function(req,res) {
-	bittrexClientTen.getTicker('usdt-btc', function(data) {
-		res.send(data);
-	})
-})
-
 app.get('/print', function(req,res) {
 	// Create a new instance of a Workbook class 
 	var wb = new xl.Workbook();
-	var ws = wb.addWorksheet('Sheet 1');
+	var ws = wb.addWorksheet('Test1');
 
 	// Create a reusable style 
 	var style = wb.createStyle({
