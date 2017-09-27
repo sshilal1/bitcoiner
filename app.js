@@ -25,7 +25,7 @@ function pDiff(market) {
 	var first = market.start;
 	var second = market.last;
 	var result = (((first - second) * 100)/first);
-	return result.toFixed(3);
+	return result.toFixed(2);
 }
 
 /******
@@ -35,7 +35,7 @@ var bittrexClient = new Bittrex.bittrexClient(1000000);
 var runner = {
 	btcValue : 0,
 	markets : {},
-	notes: []
+	notes: {}
 }
 
 // Initial gather
@@ -61,14 +61,21 @@ setInterval(function() {
 				// Calc % Increase
 				runner.markets[market].change = pDiff(runner.markets[market]);
 
-				// If greater than threshold, buy
-				if (runner.markets[market].change > buyThreshold) {
-					var logStr = "Buying " + runner.markets[market].name + " at " + runner.markets[market].last;
-					runner.notes.push(logStr);
-				}
-				
 				// Set new Last
 				runner.markets[market].last = ticks[market].last;
+
+				var m = runner.markets[market];
+
+				// If greater than threshold, buy once
+				if (m.change > buyThreshold) {
+
+					// If doesnt exist, lets buy
+					if (!runner.notes[m.name]) {
+
+						runner.notes[m.name] = [];
+						runner.notes[m.name].push("Buying " + m.name + " at " + m.last + ": " + m.change + "% change");
+					}
+				}
 			}
 		})
 	})
