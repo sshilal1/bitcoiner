@@ -1,4 +1,5 @@
-const buyThreshold = .5;
+const buyThreshold = 1;
+const sellThreshold = 2;
 const recordInterval = 60000 * 5; // 5 minutes
 
 var express = require('express');
@@ -28,14 +29,40 @@ function pDiff(market) {
 	return result.toFixed(2);
 }
 
-/******
-BITTREX
-*******/
+function buying(market) {
+	runner.notes[market.name] = [];
+	runner.notes[market.name].push("Buying at " + market.last + ": " + market.change + "% change");
+	runner.bought.push(market.name);
+}
+
+function selling(market) {
+	runner.notes[market.name] = [];
+	runner.notes[market.name].push("Selling at " + market.last + ": " + market.change + "% change");
+}
+
+function monitorChange() {
+	setInterval(function() {
+		if (runner.bought.length != 0) {
+			var monitor = {};
+			for (var marketname of runner.bought) {
+				monitor[marketname] = {
+					last : runner.markets[marketname].last,
+					change : runner.markets[marketname].change
+				}
+			}
+			console.log("Monitoring: ", monitor);
+		}
+	},1000);
+}
+/****************
+Begin Application
+*****************/
 var bittrexClient = new Bittrex.bittrexClient(1000000);
 var runner = {
 	btcValue : 0,
 	markets : {},
-	notes: {}
+	notes: {},
+	bought: []
 }
 
 // Initial gather
@@ -51,7 +78,6 @@ bittrexClient.getTicker('usdt-btc', function(data) {
 // Interval query
 setInterval(function() {
 	bittrexClient.getTicker('usdt-btc', function(data) {
-		
 		// Set BTC price
 		runner.btcValue = data.result.Last;
 		
@@ -60,20 +86,21 @@ setInterval(function() {
 				
 				// Calc % Increase
 				runner.markets[market].change = pDiff(runner.markets[market]);
-
 				// Set new Last
 				runner.markets[market].last = ticks[market].last;
 
 				var m = runner.markets[market];
-
-				// If greater than threshold, buy once
 				if (m.change > buyThreshold) {
 
-					// If doesnt exist, lets buy
+					// If havent bought yet, lets buy
 					if (!runner.notes[m.name]) {
-
-						runner.notes[m.name] = [];
-						runner.notes[m.name].push("Buying " + m.name + " at " + m.last + ": " + m.change + "% change");
+						buying(m);
+					}
+					// If we have bought, lets see if we should sell
+					else {
+						if (m.change > sellThreshold) {
+							selling(m);
+						}
 					}
 				}
 			}
@@ -82,6 +109,9 @@ setInterval(function() {
 	//console.log(runner.markets);
 	console.log(runner.notes);
 }, 3000);
+
+// Kick off monitor function
+monitorChange();
 
 app.get('/print', function(req,res) {
 	// Create a new instance of a Workbook class 
