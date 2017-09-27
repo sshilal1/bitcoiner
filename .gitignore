@@ -6,3 +6,4 @@ yarn.lock
 npm-debug.log
 api.js
 package-lock.json
+*logs

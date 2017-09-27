@@ -1,5 +1,5 @@
 const buyThreshold = 1;
-const sellThreshold = 2;
+const sellThreshold = 4;
 const recordInterval = 60000 * 5; // 5 minutes
 
 var express = require('express');
@@ -18,6 +18,33 @@ app.get('/ticker', function(req,res) {
 		res.send(data);
 	})
 })
+// --------------------
+// Setup Logging
+// --------------------
+const logDir = 'logs';
+const fs = require('fs');
+// Create the log directory if it does not exist
+if (!fs.existsSync(logDir)) {
+	fs.mkdirSync(logDir);
+}
+
+const tsFormat = () => (new Date()).toLocaleString();
+var d = new Date();
+var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()
+var winston = require('winston');
+var logger = new (winston.Logger)({
+  transports: [
+		new (winston.transports.Console)({
+			timestamp: tsFormat,
+			colorize: true,
+			level: 'info'
+		}),
+    new (winston.transports.File)({
+			filename: `${logDir}/${filename}.log`,
+			timestamp: tsFormat,
+		})
+	]
+});
 /*********
 HELPER FNs
 **********/
@@ -33,6 +60,7 @@ function buying(market) {
 	runner.notes[market.name] = [];
 	runner.notes[market.name].push("Buying at " + market.last + ": " + market.change + "% change");
 	runner.bought.push(market.name);
+	logger.log('info', "Monitoring On...");
 }
 
 function selling(market) {
@@ -50,14 +78,14 @@ function monitorChange() {
 					change : runner.markets[marketname].change
 				}
 			}
-			console.log("Monitoring: ", monitor);
+			logger.log('info', monitor);
 		}
 	},1000);
 }
 /****************
 Begin Application
 *****************/
-var bittrexClient = new Bittrex.bittrexClient(1000000);
+var bittrexApi = new Bittrex.bittrexClient(1000000);
 var runner = {
 	btcValue : 0,
 	markets : {},
@@ -66,22 +94,22 @@ var runner = {
 }
 
 // Initial gather
-bittrexClient.getTicker('usdt-btc', function(data) {
+bittrexApi.getTicker('usdt-btc', function(data) {
 	runner.btcValue = data.result.Last;
-	bittrexClient.getMarketSummaries(runner.btcValue, function(markets) {
+	bittrexApi.getMarketSummaries(runner.btcValue, function(markets) {
 		runner.markets = markets;
-		console.log(runner.markets);
-		console.log("Monitoring " + Object.keys(runner.markets).length + " markets");
+		logger.log('info', runner.markets);
+		logger.log('info', "Monitoring " + Object.keys(runner.markets).length + " markets");
 	})
 })
 
 // Interval query
 setInterval(function() {
-	bittrexClient.getTicker('usdt-btc', function(data) {
+	bittrexApi.getTicker('usdt-btc', function(data) {
 		// Set BTC price
 		runner.btcValue = data.result.Last;
 		
-		bittrexClient.getLatestTicks(runner.btcValue, function(ticks) {
+		bittrexApi.getLatestTicks(runner.btcValue, function(ticks) {
 			for (var market in ticks) {
 				
 				// Calc % Increase
@@ -106,8 +134,8 @@ setInterval(function() {
 			}
 		})
 	})
-	//console.log(runner.markets);
-	console.log(runner.notes);
+	//logger.log('info', runner.markets);
+	logger.log('info', runner.notes);
 }, 3000);
 
 // Kick off monitor function
@@ -133,5 +161,5 @@ app.get('/print', function(req,res) {
 })
 
 http.listen(3000, function(){
-	console.log('listening on *:3000');
+	logger.log('info', 'listening on *:3000');
 });
