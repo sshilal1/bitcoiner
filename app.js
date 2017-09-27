@@ -29,24 +29,34 @@ BITTREX
 *******/
 // Start a few clients to compare
 var recordInterval = 60000 * 5; // 5 minutes
-var bittrexClient = new Bittrex.bittrexClient(1000000,10,25);
-var bcTen = {};
+var bittrexClient = new Bittrex.bittrexClient(7000000,10,25);
+var bcTen = {
+	btcValue : 0,
+	markets : {}
+}
 
+// Initial gather
+bittrexClient.getTicker('usdt-btc', function(data) {
+	bcTen.btcValue = data.result.Last;
+	bittrexClient.getMarketSummaries(bcTen.btcValue, function(markets) {
+		bcTen.markets = markets;
+		console.log(bcTen.markets);
+	})
+})
+
+// Interval query
 setInterval(function() {
 	bittrexClient.getTicker('usdt-btc', function(data) {
 		bcTen.btcValue = data.result.Last;
-		bittrexClient.getMarketSummaries(bcTen.btcValue, function(markets) {
-			if (!bcTen.markets)
-			for (let m=0; m<markets.length; m++) {
-
+		bittrexClient.getLatestTicks(bcTen.btcValue, function(ticks) {
+			for (var market in ticks) {
+				//console.log(markets[ticker]);
+				bcTen.markets[market].last = ticks[market].last;
 			}
-			bittrexClient.getPercentIncrease(markets, function(updatedMarkets) {
-				bcTen.markets = updatedMarkets;
-			})
 		})
 	})
 	console.log(bcTen.markets);
-}, 1000);
+}, 3000);
 
 
 

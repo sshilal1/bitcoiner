@@ -5,3 +5,4 @@ yarn.lock
 *.trace
 npm-debug.log
 api.js
+package-lock.json
