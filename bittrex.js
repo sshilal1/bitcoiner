@@ -3,6 +3,17 @@ const request = require("request-promise");
 var markets = {};
 var ticks = {};
 
+var bittrexApi = function() {
+
+	this.getMarketSummaries = function(callback) {
+		request('https://bittrex.com/api/v1.1/public/getmarketsummaries')
+		.then( function(data) {
+			var json = JSON.parse(data);
+			callback(json.result)
+		})
+	}
+}
+
 var bittrexClient = function(dailyVolume) {
 
 	this.getTicker = function(market,callback) {
@@ -97,6 +108,6 @@ var trexClient = function(logger,dailyVolume,buyThreshold,sellThreshold,interval
 	});
 }
 
-var myclient = new trexClient();
+//var myclient = new trexClient();
 
-module.exports = { bittrexClient };
+module.exports = { bittrexClient, bittrexApi };
