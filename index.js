@@ -1,6 +1,6 @@
 var Bittrex = require('./bittrex.js');
 
-const watchThreshold = 5;
+const watchThreshold = 2;
 /****************
 // --------------
 Begin Application
@@ -33,9 +33,9 @@ setInterval(function() {
 					mymarket.change = result;
 					mymarket.last = market.Last;
 					
-					if (result > watchThreshold && !watchers.includes(market.name)) {
-						console.log("Now watching ", market.name);
-						watchers.push(market.name);
+					if (result > watchThreshold && !watchers.includes(mymarket.name)) {
+						console.log("Now watching ", mymarket.name);
+						watchers.push(mymarket.name);
 					}
 				}
 			}
