@@ -1,26 +1,26 @@
+var xl = require('excel4node');
+var Bittrex = require('./bittrex.js');
+var bittrexApi = new Bittrex.bittrexApi();
 // --------------
 // User variables
 // --------------
-const watchThreshold = 5;
-const buyThreshold = 10;
+const watchThreshold = 2;
+const buyThreshold = 5;
 /****************
 // --------------
 Begin Application
 // --------------
 *****************/
-var xl = require('excel4node');
-var Bittrex = require('./bittrex.js');
-var bittrexApi = new Bittrex.bittrexApi();
+// Array of all markets were monioring, populated on initial query
 var myMarkets = [];
+// Array of markets were watching, based on crossing watch threshold
 var watchers = [];
-
-var bought = {};
+// Array of bought markets, amnt, price, and time
+var purchases = [];
+// Hash table of the history of all ticks for all markets during execution
 var marketHistory = {};
+// Hash of timestamps (1=12:45, 2=12:48)
 var timestampHash = {};
-/*marketHistory = {
-	"btc-usdt" : [ {t:1, v:4232}, {t:2, v:4232}, {t:3, v:4262} ],
-	"eth-usdt" : [ {t:1, v:4232}, {t:2, v:4232}, {t:3, v:4262} ]
-}*/
 // --------------
 // Initial gather
 // --------------
@@ -92,10 +92,15 @@ setInterval(function() {
 // -------------
 // Buy function
 // -------------
-function buyMarket(market,time) {
+function buyMarket(market,time,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
 	console.log(`Time: ${time} - Buying ${market.name} at ${market.last}`);
-	buyers.push(market.name);
+	purchases.push({
+		name : market.name,
+		amount : amount,
+		price : market.last,
+		time : time
+	})
 }
 // -------------
 // Sell function
