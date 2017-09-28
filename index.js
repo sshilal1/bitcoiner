@@ -9,9 +9,22 @@ Begin Application
 var bittrexApi = new Bittrex.bittrexApi();
 var myMarkets = [];
 var watchers = [];
+var marketHistory = {};
+var timestampHash = {};
+/*
+marketHistory = {
+	"btc-usdt" : [ {t=1, v=4232}, {t=2, v=4232}, {t=3, v=4262} ],
+	"eth-usdt" : [342,573,451]
+}
+*/
 
 // Initial gather
 bittrexApi.getMarketSummaries(function(markets) {
+
+	var d = new Date();
+	var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+	timestampHash["1"] = timestamp;
+
 	for (var market of markets) {
 		var obj = {
 			name: market.MarketName,
@@ -19,12 +32,16 @@ bittrexApi.getMarketSummaries(function(markets) {
 			last: market.Last
 		}
 		myMarkets.push(obj);
+		marketHistory[market.MarketName] = [];
+		marketHistory[market.MarketName].push({t:1,v:market.Last});
 	}
 })
 // -------------
 
 // Interval Query
+var iteration = 0;
 setInterval(function() {
+	iteration++;
 	bittrexApi.getMarketSummaries(function(markets) {
 		for (var market of markets) {
 			for (var mymarket of myMarkets) {
@@ -44,6 +61,7 @@ setInterval(function() {
 
 		var d = new Date();
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+		timestampHash[iteration.toString()] = timestamp;
 
 		console.log(`\nTime: ${timestamp}\nLeaders:`);
 
@@ -57,6 +75,7 @@ setInterval(function() {
 			watcherStr += `${watcher}, `;
 		}
 		console.log(`Watching: ${watcherStr}`);
+		console.log(timestampHash);
 	})
 },3000);
 // -------------
