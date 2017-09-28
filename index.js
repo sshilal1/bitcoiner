@@ -92,7 +92,7 @@ setInterval(function() {
 
 setTimeout(function() {
 	printData();
-},6000);
+},14000);
 // -------------
 // Buy function
 // -------------
@@ -119,14 +119,21 @@ function printData() {
 		}
 	});
 
+	for (var t in timestampHash) {
+		var row = parseInt(t,10) + 1;
+		ws.cell(row,1).string(timestampHash[t]).style(style);
+	}
+
 	var marketCount = 1;
 	for (var market in marketHistory) {
 		marketCount++;
 		ws.cell(1,marketCount).string(market).style(style);
-		//for (let t=2; t<=marketHistory[market].length+1; t++) {
-			//ws.cell(marketCount,t).number(marketHistory[market][t].v).style(style);
-		//}
+
+		for (var tick of marketHistory[market]) {
+			var time = tick.t + 1;
+			ws.cell(time,marketCount).number(tick.v).style(style);
+		}
 	}
-	wb.write('Excel.xlsx');
+	wb.write('report.xlsx');
 }
 // -------------
