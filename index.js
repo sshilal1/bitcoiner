@@ -89,10 +89,6 @@ setInterval(function() {
 		console.log(`Watching: ${watcherStr}`);
 	})
 },2000);
-
-setTimeout(function() {
-	printData();
-},14000);
 // -------------
 // Buy function
 // -------------
@@ -137,3 +133,19 @@ function printData() {
 	wb.write('report.xlsx');
 }
 // -------------
+// Print at node close
+// -------------
+var keypress = require('keypress');
+// make `process.stdin` begin emitting "keypress" events 
+keypress(process.stdin);
+// listen for the "keypress" event 
+process.stdin.on('keypress', function (ch, key) {
+	console.log('got "keypress"', key);
+	if (key && key.name == 'p') {
+		printData();
+	}
+	if (key && key.ctrl && key.name == 'c') {
+		process.exit();
+	}
+});
+process.stdin.setRawMode(true);
