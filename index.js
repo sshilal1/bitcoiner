@@ -1,11 +1,36 @@
 var xl = require('excel4node');
 var Bittrex = require('./bittrex.js');
 var bittrexApi = new Bittrex.bittrexApi();
+// --------------------
+// Setup Logging
+// --------------------
+const logDir = 'logs';
+const fs = require('fs');
+// Create the log directory if it does not exist
+if (!fs.existsSync(logDir)) {
+	fs.mkdirSync(logDir);
+}
+
+const tsFormat = () => (new Date()).toLocaleString();
+var d = new Date();
+var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()
+var winston = require('winston');
+var logger = new (winston.Logger)({
+  transports: [
+		new (winston.transports.Console)({
+			colorize: true,
+			level: 'info'
+		}),
+    new (winston.transports.File)({
+			filename: `${logDir}/${filename}.log`,
+			timestamp: tsFormat,
+		})
+	]
+});
 // --------------
 // User variables
 // --------------
-const watchThreshold = 2;
-const buyThreshold = 5;
+const buyThreshold = 2;
 /****************
 // --------------
 Begin Application
@@ -13,8 +38,6 @@ Begin Application
 *****************/
 // Array of all markets were monioring, populated on initial query
 var myMarkets = [];
-// Array of markets were watching, based on crossing watch threshold
-var watchers = [];
 // Array of bought markets, amnt, price, and time
 var purchases = [];
 // Hash table of the history of all ticks for all markets during execution
@@ -35,7 +58,8 @@ bittrexApi.getMarketSummaries(function(markets) {
 			name: market.MarketName,
 			start: market.Last,
 			last: market.Last,
-			ask: market.Ask
+			ask: market.Ask,
+			bought: false
 		}
 		myMarkets.push(obj);
 		marketHistory[market.MarketName] = [];
@@ -61,13 +85,8 @@ setInterval(function() {
 					mymarket.change = result;
 					mymarket.last = market.Last;
 					marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
-					
-					if (result > watchThreshold && !watchers.includes(mymarket.name)) {
-						console.log("Now watching ", mymarket.name);
-						watchers.push(mymarket.name);
-					}
 
-					if (result > buyThreshold && !bought[mymarket.name]) {
+					if (result > buyThreshold && !mymarket.bought) {
 						buyMarket(mymarket,timestamp);
 					}
 				}
@@ -75,18 +94,16 @@ setInterval(function() {
 		}
 		myMarkets.sort(function(a,b) { return b.change - a.change});
 
-		console.log(`\nTime: ${timestamp}\nLeaders:`);
+		console.log(`\nTime: ${timestamp}`);
 
+		var longLeaderString = "Leaders: ";
 		for (let i=0; i<5; i++) {			
 			var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;
-			console.log(leaderStr);
+			
+			if (i<3) { longLeaderString += leaderStr + " | "; }
+			//console.log(leaderStr);
 		}
-
-		var watcherStr = "";
-		for (var watcher of watchers) {
-			watcherStr += `${watcher}, `;
-		}
-		console.log(`Watching: ${watcherStr}`);
+		logger.info(longLeaderString);
 	})
 },2000);
 // -------------
@@ -95,6 +112,11 @@ setInterval(function() {
 function buyMarket(market,time,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
 	console.log(`Time: ${time} - Buying ${market.name} at ${market.last}`);
+	for (let m=0; m<myMarkets.length; m++) {
+		if (myMarkets[m].name === market.name) {
+			myMarkets[m].bought = true;
+		}
+	}
 	purchases.push({
 		name : market.name,
 		amount : amount,
