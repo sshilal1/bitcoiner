@@ -5,8 +5,13 @@ var buyThreshold = process.argv[2];
 var sellThreshold = process.argv[3];
 // --------------
 var xl = require('excel4node');
-var Bittrex = require('./bittrex.js');
-var bittrexApi = new Bittrex.bittrexApi();
+const bittrex = require('node-bittrex-api');
+const api = require('./api');
+bittrex.options({ 
+	'apikey' : api.bittrex.key,
+	'apisecret' : api.bittrex.secret
+});
+
 // --------------------
 // Setup Logging
 // --------------------
@@ -49,18 +54,19 @@ var timestampHash = {};
 // --------------
 // Initial gather
 // --------------
-bittrexApi.getMarketSummaries(function(markets) {
+bittrex.getmarketsummaries(function(markets) {
 
 	var d = new Date();
 	var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 	timestampHash["1"] = timestamp;
 
-	for (var market of markets) {
+	for (var market of markets.result) {
 		var obj = {
 			name: market.MarketName,
 			start: market.Last,
 			last: market.Last,
 			ask: market.Ask,
+			change: "0.00",
 			bought: false,
 			sold: false
 		}
@@ -75,13 +81,13 @@ bittrexApi.getMarketSummaries(function(markets) {
 var iteration = 0;
 setInterval(function() {
 	iteration++;
-	bittrexApi.getMarketSummaries(function(markets) {
+	bittrex.getmarketsummaries(function(markets) {
 
 		var d = new Date();
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 		timestampHash[iteration.toString()] = timestamp;
 
-		for (var market of markets) {
+		for (var market of markets.result) {
 			for (var mymarket of myMarkets) {
 				if (mymarket.name === market.MarketName) {
 					var result = (((market.Last - mymarket.start) * 100)/market.Last).toFixed(2);
@@ -126,7 +132,7 @@ setInterval(function() {
 			logger.info(purchaseStr);
 		}
 	})
-},5000);
+},2000);
 // -------------
 // -------------
 // -------------

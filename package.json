@@ -15,8 +15,6 @@
     "gdax": "^0.4.2",
     "keypress": "^0.2.1",
     "node-bittrex-api": "^0.7.6",
-    "request": "^2.82.0",
-    "request-promise": "^4.2.2",
     "winston": "^2.3.1"
   }
 }
