@@ -1,3 +1,9 @@
+// --------------
+// User variables
+// --------------
+var buyThreshold = process.argv[2] || 10; // default 10
+var sellThreshold = process.argv[3] || 20; // default 20
+// --------------
 var xl = require('excel4node');
 var Bittrex = require('./bittrex.js');
 var bittrexApi = new Bittrex.bittrexApi();
@@ -27,10 +33,6 @@ var logger = new (winston.Logger)({
 		})
 	]
 });
-// --------------
-// User variables
-// --------------
-const buyThreshold = 2;
 /****************
 // --------------
 Begin Application
@@ -89,12 +91,16 @@ setInterval(function() {
 					if (result > buyThreshold && !mymarket.bought) {
 						buyMarket(mymarket,timestamp);
 					}
+
+					if (result > sellThreshold && mymarket.bought) {
+						sellMarket(mymarket,timestamp);
+					}
 				}
 			}
 		}
 		myMarkets.sort(function(a,b) { return b.change - a.change});
 
-		console.log(`\nTime: ${timestamp}`);
+		console.log(`Time: ${timestamp}`);
 
 		var longLeaderString = "Leaders: ";
 		for (let i=0; i<5; i++) {			
@@ -107,11 +113,23 @@ setInterval(function() {
 	})
 },2000);
 // -------------
+// Bought Interval Query
+// -------------
+setInterval(function() {
+	if (purchases.length > 0) {
+		var purchaseStr = "Bought: ";
+		for (var purchase in purchases) {
+			purchaseStr += `${purchases[purchase].name} | `;
+		}
+		logger.info(purchaseStr);
+	}
+},2000)
+// -------------
 // Buy function
 // -------------
 function buyMarket(market,time,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
-	console.log(`Time: ${time} - Buying ${market.name} at ${market.last}`);
+	logger.info(`Buying ${market.name} at ${market.last}`);
 	for (let m=0; m<myMarkets.length; m++) {
 		if (myMarkets[m].name === market.name) {
 			myMarkets[m].bought = true;
@@ -127,7 +145,9 @@ function buyMarket(market,time,amount) {
 // -------------
 // Sell function
 // -------------
+function sellMarket() {
 
+}
 // -------------
 // Print function, writes to excel
 // -------------
@@ -163,11 +183,8 @@ function printData() {
 // Print at node close
 // -------------
 var keypress = require('keypress');
-// make `process.stdin` begin emitting "keypress" events 
 keypress(process.stdin);
-// listen for the "keypress" event 
 process.stdin.on('keypress', function (ch, key) {
-	console.log('got "keypress"', key);
 	if (key && key.name == 'p') {
 		printData();
 	}
