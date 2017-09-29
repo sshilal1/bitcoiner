@@ -89,6 +89,12 @@ setInterval(function() {
 					mymarket.last = market.Last;
 					marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
 
+					for (var purchase of purchases) {
+						if (purchase.name === mymarket.name) {
+							purchase.change = result;
+						}
+					}
+
 					if (result > buyThreshold && !mymarket.bought) {
 						buyMarket(mymarket,timestamp);
 					}
@@ -100,31 +106,35 @@ setInterval(function() {
 			}
 		}
 		myMarkets.sort(function(a,b) { return b.change - a.change});
-
+		purchases.sort(function(a,b) { return b.change - a.change});
 		console.log(`Time: ${timestamp}`);
 
+		// Leaders interval
 		var longLeaderString = "Leaders: ";
 		for (let i=0; i<5; i++) {			
-			var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;
-			
+			var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
 			if (i<3) { longLeaderString += leaderStr + " | "; }
-			//console.log(leaderStr);
 		}
 		logger.info(longLeaderString);
+
+		// Bought interval
+		if (purchases.length > 0) {
+			var purchaseStr = "Bought : ";
+			for (var purchase in purchases) {
+				purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
+			}
+			logger.info(purchaseStr);
+		}
 	})
 },2000);
 // -------------
-// Bought Interval Query
 // -------------
-setInterval(function() {
-	if (purchases.length > 0) {
-		var purchaseStr = "Bought : ";
-		for (var purchase in purchases) {
-			purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
-		}
-		logger.info(purchaseStr);
-	}
-},2000)
+// -------------
+// -------------
+// HELPER FUNCTIONS
+// -------------
+// -------------
+// -------------
 // -------------
 // Buy function
 // -------------
@@ -140,7 +150,8 @@ function buyMarket(market,time,amount) {
 		name : market.name,
 		amount : amount,
 		price : market.last,
-		time : time
+		time : time,
+		change : market.change
 	})
 }
 // -------------
