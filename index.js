@@ -39,6 +39,14 @@ var logger = new (winston.Logger)({
 		})
 	]
 });
+var reporter = new (winston.Logger)({
+	transports: [
+		new (winston.transports.File)({
+			filename: `${logDir}/${filename}__report.log`,
+			timestamp: tsFormat,
+		})
+	]
+})
 /****************
 // --------------
 Begin Application
@@ -100,7 +108,11 @@ setInterval(function() {
 
 					for (var purchase of purchases) {
 						if (purchase.name === mymarket.name) {
+							reportOn(purchase,mymarket);
 							purchase.change = result;
+							// if (pchange(market) - pchange(purchase) > 5) {
+								// cut losses
+							//}
 						}
 					}
 
@@ -145,11 +157,42 @@ setInterval(function() {
 // -------------
 // -------------
 // -------------
+// Reporter function for purchases
+// -------------
+function reportOn(purchase,market) {
+	var last = market.last;
+	var start = purchase.price;
+	var oldchange = purchase.change;
+	var newchange = market.change;
+	var result = pdiff(last, start);
+
+	if (oldchange <= (buyThreshold+5) && newchange >= (buyThreshold+5)) {
+		reporter.info(`${market.name} Crossing 1% gain`);
+	}
+	else if (oldchange <= (buyThreshold-5) && newchange >= (buyThreshold-5)) {
+		reporter.info(`${market.name} Dipping 1% loss`);
+	}
+	else if (oldchange <= (buyThreshold+10) && newchange >= (buyThreshold+10)) {
+		reporter.info(`${market.name} Crossing 2% gain`);
+	}
+	else if (oldchange <= (buyThreshold-10) && newchange >= (buyThreshold-10)) {
+		reporter.info(`${market.name} Dipping 2% loss`);
+	}
+}
+// -------------
+// Percent difference
+// -------------
+function pdiff(first,second) {
+	var answer = (((first - second) * 100) / first).toFixed(2);
+	return parseFloat(answer,10);
+}
+// -------------
 // Buy function
 // -------------
 function buyMarket(market,time,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
 	logger.info(`Buying ${market.name} at ${market.change}%`);
+	reporter.info(`Buying ${market.name} at ${market.change}%`);
 	for (let m=0; m<myMarkets.length; m++) {
 		if (myMarkets[m].name === market.name) {
 			myMarkets[m].bought = true;
@@ -168,6 +211,7 @@ function buyMarket(market,time,amount) {
 // -------------
 function sellMarket(market, time) {
 	logger.info(`Selling ${market.name} at ${market.change}%`);
+	reporter.info(`Selling ${market.name} at ${market.change}%`);
 	for (let p=0; p<purchases.length; p++) {
 		if (purchases[p].name == market.name) {
 			for (var mymarket of myMarkets) {
@@ -175,6 +219,7 @@ function sellMarket(market, time) {
 					mymarket.sold = true;
 					var profit = ((mymarket.last - purchases[p].price) * 100 / mymarket.last).toFixed(2);
 					logger.info(`Profited ${profit}% from ${mymarket.name}`);
+					reporter.info(`Profited ${profit}% from ${mymarket.name}`);
 				}
 			}
 			purchases.splice(p,1);
