@@ -1,8 +1,8 @@
 // --------------
 // User variables
 // --------------
-var buyThreshold = process.argv[2] || 10; // default 10
-var sellThreshold = process.argv[3] || 20; // default 20
+var buyThreshold = process.argv[2];
+var sellThreshold = process.argv[3];
 // --------------
 var xl = require('excel4node');
 var Bittrex = require('./bittrex.js');
@@ -95,11 +95,11 @@ setInterval(function() {
 						}
 					}
 
-					if (result > buyThreshold && !mymarket.bought) {
+					if ((parseFloat(result,10) > buyThreshold) && !mymarket.bought) {
 						buyMarket(mymarket,timestamp);
 					}
 
-					else if (result > sellThreshold && mymarket.bought && !mymarket.sold) {
+					else if ((parseFloat(result,10) > sellThreshold) && mymarket.bought && !mymarket.sold) {
 						sellMarket(mymarket,timestamp);
 					}
 				}
@@ -126,7 +126,7 @@ setInterval(function() {
 			logger.info(purchaseStr);
 		}
 	})
-},2000);
+},5000);
 // -------------
 // -------------
 // -------------
