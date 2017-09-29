@@ -1,4 +1,5 @@
 const request = require("request-promise");
+const bittrex = require('../node.bittrex.api');
 
 var markets = {};
 var ticks = {};
@@ -10,6 +11,24 @@ var bittrexApi = function() {
 		.then( function(data) {
 			var json = JSON.parse(data);
 			callback(json.result)
+		})
+	}
+}
+
+var bittrexAuthedApi = function() {
+
+	const api = require('./api');
+	const APIKEY = api.bittrex.key;
+	const APISECRET = api.bittrex.secret;
+
+	bittrex.options({ 
+		'apikey' : APIKEY,
+		'apisecret' : APISECRET
+	});
+
+	this.getbalances = function(callback) {
+		bittrex.getbalances( function(data) {
+			callback(data);
 		})
 	}
 }
@@ -110,4 +129,4 @@ var trexClient = function(logger,dailyVolume,buyThreshold,sellThreshold,interval
 
 //var myclient = new trexClient();
 
-module.exports = { bittrexClient, bittrexApi };
+module.exports = { bittrexClient, bittrexApi, bittrexAuthedApi };
