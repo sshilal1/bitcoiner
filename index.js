@@ -61,7 +61,8 @@ bittrexApi.getMarketSummaries(function(markets) {
 			start: market.Last,
 			last: market.Last,
 			ask: market.Ask,
-			bought: false
+			bought: false,
+			sold: false
 		}
 		myMarkets.push(obj);
 		marketHistory[market.MarketName] = [];
@@ -92,7 +93,7 @@ setInterval(function() {
 						buyMarket(mymarket,timestamp);
 					}
 
-					if (result > sellThreshold && mymarket.bought) {
+					else if (result > sellThreshold && mymarket.bought && !mymarket.sold) {
 						sellMarket(mymarket,timestamp);
 					}
 				}
@@ -117,9 +118,9 @@ setInterval(function() {
 // -------------
 setInterval(function() {
 	if (purchases.length > 0) {
-		var purchaseStr = "Bought: ";
+		var purchaseStr = "Bought : ";
 		for (var purchase in purchases) {
-			purchaseStr += `${purchases[purchase].name} | `;
+			purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
 		}
 		logger.info(purchaseStr);
 	}
@@ -129,7 +130,7 @@ setInterval(function() {
 // -------------
 function buyMarket(market,time,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
-	logger.info(`Buying ${market.name} at ${market.last}`);
+	logger.info(`Buying ${market.name} at ${market.change}%`);
 	for (let m=0; m<myMarkets.length; m++) {
 		if (myMarkets[m].name === market.name) {
 			myMarkets[m].bought = true;
@@ -145,8 +146,18 @@ function buyMarket(market,time,amount) {
 // -------------
 // Sell function
 // -------------
-function sellMarket() {
-
+function sellMarket(market, time) {
+	logger.info(`Selling ${market.name} at ${market.change}%`);
+	for (let p=0; p<purchases.length; p++) {
+		if (purchases[p].name == market.name) {
+			for (var mymarket of myMarkets) {
+				if (mymarket.name == market.name) {
+					mymarket.sold = true;
+				}
+			}
+			purchases.splice(p,1);
+		}
+	}
 }
 // -------------
 // Print function, writes to excel
