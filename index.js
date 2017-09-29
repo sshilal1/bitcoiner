@@ -25,7 +25,7 @@ if (!fs.existsSync(logDir)) {
 
 const tsFormat = () => (new Date()).toLocaleString();
 var d = new Date();
-var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()
+var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()+'b'+buyThreshold+'s'+sellThreshold;
 var winston = require('winston');
 var logger = new (winston.Logger)({
   transports: [
@@ -94,6 +94,8 @@ setInterval(function() {
 					var result = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
 					mymarket.change = result;
 					mymarket.last = market.Last;
+					mymarket.ask = market.Ask;
+					mymarket.low = market.Low;
 					marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
 
 					for (var purchase of purchases) {
@@ -199,13 +201,19 @@ function printData() {
 	}
 
 	var marketCount = 1;
-	for (var market in marketHistory) {
-		marketCount++;
-		ws.cell(1,marketCount).string(market).style(style);
+	for (let i=0; i<6; i++) {
+		var myMarket = myMarkets[i];
 
-		for (var tick of marketHistory[market]) {
-			var time = tick.t + 1;
-			ws.cell(time,marketCount).number(tick.v).style(style);
+		for (var market in marketHistory) {
+			if (market == myMarket.name) {
+				marketCount++;
+				ws.cell(1,marketCount).string(market).style(style);
+
+				for (var tick of marketHistory[market]) {
+					var time = tick.t + 1;
+					ws.cell(time,marketCount).number(tick.v);
+				}
+			}
 		}
 	}
 	wb.write('report.xlsx');
