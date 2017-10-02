@@ -76,6 +76,7 @@ bittrex.getmarketsummaries(function(markets) {
 			last: market.Last,
 			ask: market.Ask,
 			low: market.Low,
+			top: 0,
 			bought: false,
 			sold: false
 		}
@@ -101,6 +102,7 @@ setInterval(function() {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
 						var result = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
+						if (result > mymarket.change) { mymarket.top = result; }
 						mymarket.change = result;
 						mymarket.last = market.Last;
 						mymarket.ask = market.Ask;
@@ -165,18 +167,22 @@ setInterval(function() {
 // Reporter function for purchases
 // -------------
 function reportOn(newchange,market) {
+	var cross5 = parseInt(buyThreshold,10) + 5;
+	var cross10 = parseInt(buyThreshold,10) - 10;
+	var dip5 = parseInt(buyThreshold,10) - 5;
+	var dip10 = parseInt(buyThreshold,10) - 10;
 	var oldchange = market.change;
 
-	if (oldchange <= (buyThreshold+5) && newchange >= (buyThreshold+5)) {
+	if (oldchange <= cross5 && newchange >= cross5) {
 		reporter.info(`${market.name} Crossing 5% gain from ${oldchange}% to ${newchange}%`);
 	}
-	else if (oldchange <= (buyThreshold-5) && newchange >= (buyThreshold-5)) {
+	else if (newchange <= dip5 && oldchange >= dip5) {
 		reporter.info(`${market.name} Dipping 5% loss from ${oldchange}% to ${newchange}%`);
 	}
-	else if (oldchange <= (buyThreshold+10) && newchange >= (buyThreshold+10)) {
+	else if (oldchange <= cross10 && newchange >= cross10) {
 		reporter.info(`${market.name} Crossing 10% gain from ${oldchange}% to ${newchange}%`);
 	}
-	else if (oldchange <= (buyThreshold-10) && newchange >= (buyThreshold-10)) {
+	else if (newchange <= dip10 && oldchange >= dip10) {
 		reporter.info(`${market.name} Dipping 10% loss from ${oldchange}% to ${newchange}%`);
 	}
 }
