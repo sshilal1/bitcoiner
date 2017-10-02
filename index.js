@@ -96,55 +96,57 @@ setInterval(function() {
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 		timestampHash[iteration.toString()] = timestamp;
 
-		for (var market of markets.result) {
-			for (var mymarket of myMarkets) {
-				if (mymarket.name === market.MarketName) {
-					var result = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
-					mymarket.change = result;
-					mymarket.last = market.Last;
-					mymarket.ask = market.Ask;
-					mymarket.low = market.Low;
-					marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
+		if (markets.result) {
+			for (var market of markets.result) {
+				for (var mymarket of myMarkets) {
+					if (mymarket.name === market.MarketName) {
+						var result = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
+						mymarket.change = result;
+						mymarket.last = market.Last;
+						mymarket.ask = market.Ask;
+						mymarket.low = market.Low;
+						marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
 
-					for (var purchase of purchases) {
-						if (purchase.name === mymarket.name) {
-							reportOn(result,mymarket);
-							purchase.change = result;
-							// if (pchange(market) - pchange(purchase) > 5) {
-								// cut losses
-							//}
+						for (var purchase of purchases) {
+							if (purchase.name === mymarket.name) {
+								reportOn(result,mymarket);
+								purchase.change = result;
+								// if (pchange(market) - pchange(purchase) > 5) {
+									// cut losses
+								//}
+							}
 						}
-					}
 
-					if ((parseFloat(result,10) > buyThreshold) && !mymarket.bought) {
-						buyMarket(mymarket,timestamp);
-					}
+						if ((parseFloat(result,10) > buyThreshold) && !mymarket.bought) {
+							buyMarket(mymarket,timestamp);
+						}
 
-					else if ((parseFloat(result,10) > sellThreshold) && mymarket.bought && !mymarket.sold) {
-						sellMarket(mymarket,timestamp);
+						else if ((parseFloat(result,10) > sellThreshold) && mymarket.bought && !mymarket.sold) {
+							sellMarket(mymarket,timestamp);
+						}
 					}
 				}
 			}
-		}
-		myMarkets.sort(function(a,b) { return b.change - a.change});
-		purchases.sort(function(a,b) { return b.change - a.change});
-		console.log(`Time: ${timestamp}`);
+			myMarkets.sort(function(a,b) { return b.change - a.change});
+			purchases.sort(function(a,b) { return b.change - a.change});
+			console.log(`Time: ${timestamp}`);
 
-		// Leaders interval
-		var longLeaderString = "Leaders: ";
-		for (let i=0; i<5; i++) {			
-			var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
-			if (i<3) { longLeaderString += leaderStr + " | "; }
-		}
-		logger.info(longLeaderString);
-
-		// Bought interval
-		if (purchases.length > 0) {
-			var purchaseStr = "Bought : ";
-			for (var purchase in purchases) {
-				purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
+			// Leaders interval
+			var longLeaderString = "Leaders: ";
+			for (let i=0; i<5; i++) {			
+				var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
+				if (i<3) { longLeaderString += leaderStr + " | "; }
 			}
-			logger.info(purchaseStr);
+			logger.info(longLeaderString);
+
+			// Bought interval
+			if (purchases.length > 0) {
+				var purchaseStr = "Bought : ";
+				for (var purchase in purchases) {
+					purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
+				}
+				logger.info(purchaseStr);
+			}
 		}
 	})
 },2000);
