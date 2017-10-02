@@ -96,7 +96,7 @@ setInterval(function() {
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 		timestampHash[iteration.toString()] = timestamp;
 
-		if (markets.result) {
+		if (markets) {
 			for (var market of markets.result) {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
@@ -147,6 +147,9 @@ setInterval(function() {
 				}
 				logger.info(purchaseStr);
 			}
+		}
+		else {
+			logger.info("No Query at " +timestamp);
 		}
 	})
 },2000);
