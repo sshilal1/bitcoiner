@@ -108,7 +108,7 @@ setInterval(function() {
 
 					for (var purchase of purchases) {
 						if (purchase.name === mymarket.name) {
-							reportOn(purchase,mymarket);
+							reportOn(result,mymarket);
 							purchase.change = result;
 							// if (pchange(market) - pchange(purchase) > 5) {
 								// cut losses
@@ -159,24 +159,20 @@ setInterval(function() {
 // -------------
 // Reporter function for purchases
 // -------------
-function reportOn(purchase,market) {
-	var last = market.last;
-	var start = purchase.price;
-	var oldchange = purchase.change;
-	var newchange = market.change;
-	var result = pdiff(last, start);
+function reportOn(newchange,market) {
+	var oldchange = market.change;
 
 	if (oldchange <= (buyThreshold+5) && newchange >= (buyThreshold+5)) {
-		reporter.info(`${market.name} Crossing 1% gain`);
+		reporter.info(`${market.name} Crossing 5% gain from ${oldchange}% to ${newchange}%`);
 	}
 	else if (oldchange <= (buyThreshold-5) && newchange >= (buyThreshold-5)) {
-		reporter.info(`${market.name} Dipping 1% loss`);
+		reporter.info(`${market.name} Dipping 5% loss from ${oldchange}% to ${newchange}%`);
 	}
 	else if (oldchange <= (buyThreshold+10) && newchange >= (buyThreshold+10)) {
-		reporter.info(`${market.name} Crossing 2% gain`);
+		reporter.info(`${market.name} Crossing 10% gain from ${oldchange}% to ${newchange}%`);
 	}
 	else if (oldchange <= (buyThreshold-10) && newchange >= (buyThreshold-10)) {
-		reporter.info(`${market.name} Dipping 2% loss`);
+		reporter.info(`${market.name} Dipping 10% loss from ${oldchange}% to ${newchange}%`);
 	}
 }
 // -------------
