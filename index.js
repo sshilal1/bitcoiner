@@ -2,8 +2,9 @@
 // User variables
 // --------------
 var buyThreshold = process.argv[2];
-var ceilingThreshold = process.argv[3];
-var lowOrStart = process.argv[4] || "start";
+var sellThreshold = process.argv[3];
+var ceilingThreshold = process.argv[4];
+var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
 const bittrex = require('node-bittrex-api');
@@ -25,7 +26,7 @@ if (!fs.existsSync(logDir)) {
 
 const tsFormat = () => (new Date()).toLocaleString();
 var d = new Date();
-var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()+'b'+buyThreshold+'c'+ceilingThreshold;
+var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'__b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'__'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds();
 var winston = require('winston');
 var logger = new (winston.Logger)({
   transports: [
@@ -77,9 +78,11 @@ bittrex.getmarketsummaries(function(markets) {
 			ask: market.Ask,
 			low: market.Low,
 			top: 0,
+			st: false,
 			bought: false,
 			sold: false
 		}
+		// st = sell threshold
 		myMarkets.push(obj);
 		marketHistory[market.MarketName] = [];
 		marketHistory[market.MarketName].push({t:1,v:market.Last});
@@ -116,14 +119,20 @@ setInterval(function() {
 							}
 						}
 
+						var floatPctChange = parseFloat(newPctChange,10);
 						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-						var buyDip = buyThreshold - parseFloat(newPctChange,10);
-						if ((parseFloat(newPctChange,10) > buyThreshold) && !mymarket.bought) {
+						var buyDip = buyThreshold - floatPctChange;
+
+						if (floatPctChange > sellThreshold) {
+							mymarket.st = true;
+						}
+
+						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
 							buyMarket(mymarket,timestamp);
 						}
 
-						else if ((ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-							reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gain...`);
+						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
+							reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
 							sellMarket(mymarket,timestamp);
 						}
 
@@ -159,7 +168,7 @@ setInterval(function() {
 			logger.info("No Query at " +timestamp);
 		}
 	})
-},10000);
+},5000);
 // -------------
 // -------------
 // -------------
