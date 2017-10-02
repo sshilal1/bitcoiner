@@ -2,7 +2,7 @@
 // User variables
 // --------------
 var buyThreshold = process.argv[2];
-var sellThreshold = process.argv[3];
+var ceilingThreshold = process.argv[3];
 var lowOrStart = process.argv[4] || "start";
 // --------------
 var xl = require('excel4node');
@@ -25,7 +25,7 @@ if (!fs.existsSync(logDir)) {
 
 const tsFormat = () => (new Date()).toLocaleString();
 var d = new Date();
-var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()+'b'+buyThreshold+'s'+sellThreshold;
+var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds()+'b'+buyThreshold+'c'+ceilingThreshold;
 var winston = require('winston');
 var logger = new (winston.Logger)({
   transports: [
@@ -101,9 +101,9 @@ setInterval(function() {
 			for (var market of markets.result) {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
-						var result = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
-						if (result > mymarket.change) { mymarket.top = result; }
-						mymarket.change = result;
+						var newPctChange = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
+						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
+						mymarket.change = newPctChange;
 						mymarket.last = market.Last;
 						mymarket.ask = market.Ask;
 						mymarket.low = market.Low;
@@ -111,19 +111,24 @@ setInterval(function() {
 
 						for (var purchase of purchases) {
 							if (purchase.name === mymarket.name) {
-								reportOn(result,mymarket);
-								purchase.change = result;
-								// if (pchange(market) - pchange(purchase) > 5) {
-									// cut losses
-								//}
+								reportOn(newPctChange,mymarket);
+								purchase.change = newPctChange;
 							}
 						}
 
-						if ((parseFloat(result,10) > buyThreshold) && !mymarket.bought) {
+						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
+						var buyDip = buyThreshold - parseFloat(newPctChange,10);
+						if ((parseFloat(newPctChange,10) > buyThreshold) && !mymarket.bought) {
 							buyMarket(mymarket,timestamp);
 						}
 
-						else if ((parseFloat(result,10) > sellThreshold) && mymarket.bought && !mymarket.sold) {
+						else if ((ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
+							reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gain...`);
+							sellMarket(mymarket,timestamp);
+						}
+
+						else if ((buyDip > 5) && mymarket.bought && !mymarket.sold) {
+							reporter.info(`${buyDip}% crossing buy threshold dip of 5%, selling to cut losses...`);
 							sellMarket(mymarket,timestamp);
 						}
 					}
@@ -154,7 +159,7 @@ setInterval(function() {
 			logger.info("No Query at " +timestamp);
 		}
 	})
-},2000);
+},10000);
 // -------------
 // -------------
 // -------------
@@ -253,7 +258,7 @@ function printData() {
 	}
 
 	var marketCount = 1;
-	for (let i=0; i<6; i++) {
+	for (let i=0; i<10; i++) {
 		var myMarket = myMarkets[i];
 
 		for (var market in marketHistory) {
