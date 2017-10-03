@@ -137,7 +137,7 @@ setInterval(function() {
 						}
 
 						else if ((buyDip > 5) && mymarket.bought && !mymarket.sold) {
-							reporter.info(`${buyDip}% crossing buy threshold dip of 5%, selling to cut losses...`);
+							reporter.info(`${mymarket.name} at ${newPctChange}% crossing buy threshold dip of 5% (${buyDip}%), cutting losses...`);
 							sellMarket(mymarket,timestamp);
 						}
 					}
