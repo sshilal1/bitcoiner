@@ -49,6 +49,36 @@ bittrex.getbalances(function(data) {
 	console.log(data);
 })
 
-bittrex.getmarketsummaries(function(data) {
-	console.log(data.result);
-})
+class bittrexApi {
+	constructor() {
+		this.markets = [];
+	}
+
+	getSummaries () {
+		return new Promise((resolve, reject) => {
+			bittrex.getmarketsummaries(function(data) {
+				for (let market of data.result) {
+					var obj = {
+						name: market.MarketName,
+						start: market.Last,
+						last: market.Last,
+						ask: market.Ask,
+						low: market.Low
+					}
+					var newPctChange = (((market.Last - market.Low) * 100)/market.Last).toFixed(2);
+					obj.change = newPctChange;
+					this.markets.push(obj);
+				}
+				resolve(this.markets);
+			})
+		})
+	}
+}
+
+async function awaitFunctionTest () {
+	const api = new bittrexApi()
+	var ourMarkets = await api.getSummaries();
+	console.log(ourMarkets[0]);
+}
+
+awaitFunctionTest();
