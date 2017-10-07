@@ -21,6 +21,18 @@ class bittrexApi {
 		this.secret = api.bittrex.secret;
 	}
 
+	getmarketsummaries () {
+		var uri = this.baseUrl + '/public/getmarketsummaries';
+		var op = assign({}, default_request_options);
+		op.uri = uri;
+
+		request(uri)
+		.then(function(data) {
+			var json = JSON.parse(data);
+			console.log(json.result);
+		})
+	}
+
 	getbalances () {
 		var nonce = new Date().getTime();
 		var uri = this.baseUrl + '/account/getbalances?apikey=' + this.apikey + '&nonce=' + nonce;
@@ -39,6 +51,7 @@ class bittrexApi {
 async function awaitFunctionTest () {
 	const api = new bittrexApi()
 	var ourMarkets = await api.getbalances();
+	var summaries = await api.getmarketsummaries();
 	//console.log(ourMarkets[0]);
 }
 awaitFunctionTest();
