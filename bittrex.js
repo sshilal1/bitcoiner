@@ -9,7 +9,7 @@ var default_request_options = {
 	agent: false,
 	headers: {
 		'User-Agent': 'Mozilla/4.0 (compatible; Node Bittrex API)',
-		'Content-type': 'application/x-www-form-urlencoded'
+		'Content-type': 'application/json'
 	}
 };
 
