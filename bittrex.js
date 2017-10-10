@@ -1,6 +1,6 @@
-var request = require('request-promise');
-var assign = require('object-assign');
-var hmac_sha512 = require('./lib/hmac-sha512.js');
+const request = require('request-promise');
+const assign = require('object-assign');
+const hmac_sha512 = require('./lib/hmac-sha512.js');
 
 const api = require('./api');
 
