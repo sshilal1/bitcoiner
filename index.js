@@ -4,7 +4,7 @@
 var buyThreshold = process.argv[2];
 var sellThreshold = process.argv[3];
 var ceilingThreshold = process.argv[4];
-var lowOrStart = process.argv[5] || "start";
+//var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
 const bittrex = require('node-bittrex-api');
@@ -104,7 +104,8 @@ setInterval(function() {
 			for (var market of markets.result) {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
-						var newPctChange = (((market.Last - mymarket[lowOrStart]) * 100)/market.Last).toFixed(2);
+						var newPctChange = (((market.Last - mymarket["start"]) * 100)/market.Last).toFixed(2);
+						var twenty4HrCHange = (((market.Last - mymarket["low"]) * 100)/market.Last).toFixed(2);
 						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
 						mymarket.change = newPctChange;
 						mymarket.last = market.Last;
