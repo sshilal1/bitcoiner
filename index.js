@@ -92,12 +92,15 @@ bittrex.getmarketsummaries(function(markets) {
 // Interval Query
 // --------------
 var iteration = 0;
+var timeStart = new Date();
+timeStart = timeStart.getTime();
 setInterval(function() {
 	iteration++;
 	bittrex.getmarketsummaries(function(markets) {
 
 		var d = new Date();
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+		var msTime = d.getTime();
 		timestampHash[iteration.toString()] = timestamp;
 
 		if (markets) {
@@ -117,6 +120,9 @@ setInterval(function() {
 							if (purchase.name === mymarket.name) {
 								reportOn(newPctChange,mymarket);
 								purchase.change = newPctChange;
+								if (parseInt((purchase.time,10) + 30000) < msTime) {
+									console.log(`30 seconds have gone by since we bought ${purchase.name}`);
+								}
 							}
 						}
 
@@ -129,7 +135,7 @@ setInterval(function() {
 						}
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
-							buyMarket(mymarket,timestamp);
+							buyMarket(mymarket,msTime);
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
@@ -211,7 +217,7 @@ function pdiff(first,second) {
 // -------------
 // Buy function
 // -------------
-function buyMarket(market,time,amount) {
+function buyMarket(market,msTime,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
 	logger.info(`Buying ${market.name} at ${market.change}%`);
 	reporter.info(`Buying ${market.name} at ${market.change}%`);
@@ -224,7 +230,7 @@ function buyMarket(market,time,amount) {
 		name : market.name,
 		amount : 1,
 		price : market.last,
-		time : time,
+		time : msTime,
 		change : market.change
 	})
 }
