@@ -92,8 +92,9 @@ bittrex.getmarketsummaries(function(markets) {
 // Interval Query
 // --------------
 var iteration = 0;
-var timeStart = new Date();
-timeStart = timeStart.getTime();
+var minutesToRecordAfterBuying = 30;
+var msAfterBuying = minutesToRecordAfterBuying * 60000;
+
 setInterval(function() {
 	iteration++;
 	bittrex.getmarketsummaries(function(markets) {
@@ -120,8 +121,9 @@ setInterval(function() {
 							if (purchase.name === mymarket.name) {
 								reportOn(newPctChange,mymarket);
 								purchase.change = newPctChange;
-								if (parseInt((purchase.time,10) + 30000) < msTime) {
-									console.log(`30 seconds have gone by since we bought ${purchase.name}`);
+								var purchaseTime = parseInt(purchase.time,10);
+								if ((purchaseTime + msAfterBuying) < msTime) {
+									reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
 								}
 							}
 						}
