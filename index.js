@@ -138,6 +138,7 @@ setInterval(function() {
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
 							buyMarket(mymarket,msTime);
+							// Here we should be spinning off a separate async function to watch this
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
