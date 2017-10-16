@@ -138,8 +138,9 @@ setInterval(function() {
 						}
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
-							//buyMarket(mymarket,msTime);
-							asyncKickOffBuy(mymarket,msTime);
+							mymarket.bought = true;
+							buyMarket(mymarket,msTime);
+							//asyncKickOffBuy(mymarket,msTime);
 							// Here we should be spinning off a separate async function to watch this
 						}
 
@@ -228,11 +229,6 @@ function buyMarket(market,msTime,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
 	logger.info(`Buying ${market.name} at ${market.change}%`);
 	reporter.info(`Buying ${market.name} at ${market.change}%`);
-	for (let m=0; m<myMarkets.length; m++) {
-		if (myMarkets[m].name === market.name) {
-			myMarkets[m].bought = true;
-		}
-	}
 	purchases.push({
 		name : market.name,
 		amount : 1,
@@ -243,8 +239,8 @@ function buyMarket(market,msTime,amount) {
 }
 
 function asyncKickOffBuy(market,ms) {
-	reporter.info(`Kicking Off thread for ${market.name} at ${market.change}%`);
-	var timer = setInterval(buyish, 1000);
+	reporter.info(`Buying ${market.name} at ${market.change}%`);
+	var timer = setInterval(buyish, 5000);
 	var sold = false;
 	function buyish() {
 		if (sold) {
