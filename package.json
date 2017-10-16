@@ -13,6 +13,7 @@
     "excel4node": "^1.2.1",
     "express": "^4.15.4",
     "gdax": "^0.4.2",
+    "jsonlines": "^0.1.1",
     "keypress": "^0.2.1",
     "node-bittrex-api": "^0.7.6",
     "winston": "^2.3.1"
