@@ -131,7 +131,7 @@ setInterval(function() {
 
 						var floatPctChange = parseFloat(newPctChange,10);
 						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-						var buyDip = buyThreshold - floatPctChange;
+						var buyDip = (buyThreshold - floatPctChange).toFixed(2);
 
 						if (floatPctChange > sellThreshold) {
 							mymarket.st = true;
