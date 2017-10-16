@@ -215,7 +215,9 @@ function reportOn(newchange,market) {
 // Percent difference
 // -------------
 function pdiff(first,second) {
-	var answer = (((first - second) * 100) / first).toFixed(2);
+	var firstN = parseFloat(first,10);
+	var secondN = parseFloat(second,10);
+	var answer = (((firstN - secondN) * 100) / firstN).toFixed(2);
 	return parseFloat(answer,10);
 }
 // -------------
@@ -265,7 +267,8 @@ function sellMarket(market, time) {
 			for (var mymarket of myMarkets) {
 				if (mymarket.name == market.name) {
 					mymarket.sold = true;
-					var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
+					var profit = pdiff(mymarket.last, purchases[p].price);
+					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
 					logger.info(`Profited ${profit}% from ${mymarket.name}`);
 					reporter.info(`Profited ${profit}% from ${mymarket.name}`);
 				}
