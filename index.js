@@ -4,6 +4,7 @@
 var buyThreshold = process.argv[2];
 var sellThreshold = process.argv[3];
 var ceilingThreshold = process.argv[4];
+var lossThreshold = process.argv[5];
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
@@ -147,8 +148,8 @@ setInterval(function() {
 							sellMarket(mymarket,timestamp);
 						}
 
-						else if ((buyDip > 5) && mymarket.bought && !mymarket.sold) {
-							reporter.info(`${mymarket.name} at ${newPctChange}% crossing buy threshold dip of 5% (${buyDip}%), cutting losses...`);
+						else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
+							reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
 							sellMarket(mymarket,timestamp);
 						}
 					}
