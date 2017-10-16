@@ -267,7 +267,9 @@ function sellMarket(market, time) {
 			for (var mymarket of myMarkets) {
 				if (mymarket.name == market.name) {
 					mymarket.sold = true;
-					var profit = pdiff(mymarket.last, purchases[p].price);
+					reporter.info(`Current Value: ${market.last}, Bought at: ${purchases[p].price}`);
+					reporter.info(`MyCurrt Value: ${mymarket.last}, Bought at: ${purchases[p].price}`);
+					var profit = pdiff(market.last, purchases[p].price);
 					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
 					logger.info(`Profited ${profit}% from ${mymarket.name}`);
 					reporter.info(`Profited ${profit}% from ${mymarket.name}`);
