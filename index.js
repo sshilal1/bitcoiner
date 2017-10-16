@@ -137,7 +137,8 @@ setInterval(function() {
 						}
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
-							buyMarket(mymarket,msTime);
+							//buyMarket(mymarket,msTime);
+							asyncKickOffBuy(mymarket,msTime);
 							// Here we should be spinning off a separate async function to watch this
 						}
 
@@ -236,6 +237,22 @@ function buyMarket(market,msTime,amount) {
 		time : msTime,
 		change : market.change
 	})
+}
+
+function asyncKickOffBuy(market,ms) {
+	reporter.info(`Kicking Off thread for ${market.name} at ${market.change}%`);
+	var timer = setInterval(buyish, 1000);
+	var sold = false;
+	function buyish() {
+		if (sold) {
+			clearInterval(timer);
+			return;
+		}
+		bittrex.getticker( { market : market.name } ,function(data) {
+			console.log(`Watching ${market.name}...`);
+			console.log(data.result.Last);
+		})
+	}
 }
 // -------------
 // Sell function
