@@ -8,6 +8,7 @@ var lossThreshold = process.argv[5];
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
+var jsonfile = require('jsonfile');
 const bittrex = require('node-bittrex-api');
 const api = require('./api');
 bittrex.options({ 
@@ -313,6 +314,9 @@ function printData() {
 	}
 	wb.write('report.xlsx');
 }
+function printJson() {
+
+}
 // -------------
 // Print at node close
 // -------------
@@ -321,6 +325,9 @@ keypress(process.stdin);
 process.stdin.on('keypress', function (ch, key) {
 	if (key && key.name == 'p') {
 		printData();
+	}
+	if (key && key.name == 'r') {
+		printJson();
 	}
 	if (key && key.ctrl && key.name == 'c') {
 		process.exit();
