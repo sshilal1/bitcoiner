@@ -113,8 +113,8 @@ if (!reRun) {
 				for (var market of markets.result) {
 					for (var mymarket of myMarkets) {
 						if (mymarket.name === market.MarketName) {
-							var newPctChange = (((market.Last - mymarket["start"]) * 100)/market.Last).toFixed(2);
-							var twenty4HrCHange = (((market.Last - mymarket["low"]) * 100)/market.Last).toFixed(2);
+							var newPctChange = pdiff(market.Last, mymarket["start"]);
+							//var twenty4HrCHange pdiff(market.Last, mymarket["low"]);
 							if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
 							mymarket.change = newPctChange;
 							mymarket.last = market.Last;
@@ -231,8 +231,7 @@ else {
 			for (var market of markets) {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
-						var newPctChange = (((market.Last - mymarket["start"]) * 100)/market.Last).toFixed(2);
-						var twenty4HrCHange = (((market.Last - mymarket["low"]) * 100)/market.Last).toFixed(2);
+						var newPctChange = pdiff(market.Last, mymarket["start"]);
 						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
 						mymarket.change = newPctChange;
 						mymarket.last = market.Last;
