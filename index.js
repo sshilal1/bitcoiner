@@ -189,7 +189,7 @@ if (!reRun) {
 }
 
 else {
-	var file = "10.18.117__b30s50c7__13-57-28_history.json";
+	var file = "10.18.117__b3s5c2__15-20-33_history.json";
 	jsonfile.readFile(file, function(err, obj) {
 
 		var mfirstQuery = obj[0];
@@ -211,8 +211,9 @@ else {
 		for (var query of obj) {
 			iteration++;
 			// Here is main loop
-			console.log("loop no:", iteration);
+			//console.log("loop no:", iteration);
 			var markets = [];
+			var timestamp;
 
 			for (var row in query) {
 				if (row != 'time') {
@@ -221,6 +222,9 @@ else {
 						Last : query[row]
 					}				
 					markets.push(obj);
+				}
+				else {
+					timestamp = query[row];
 				}
 			}
 
@@ -245,12 +249,14 @@ else {
 						var buyDip = (buyThreshold - floatPctChange).toFixed(2);
 
 						if (floatPctChange > sellThreshold) {
+							console.log(floatPctChange);
 							mymarket.st = true;
 						}
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
+							console.log("buy?");
 							mymarket.bought = true;
-							buyMarket(mymarket,msTime);
+							buyMarket(mymarket,timestamp);
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
@@ -314,8 +320,8 @@ function pdiff(first,second) {
 // -------------
 function buyMarket(market,msTime,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
-	logger.info(`Buying ${market.name} at ${market.change}%`);
-	reporter.info(`Buying ${market.name} at ${market.change}%`);
+	logger.info(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
+	reporter.info(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
 	purchases.push({
 		name : market.name,
 		amount : 1,
@@ -344,8 +350,8 @@ function asyncKickOffBuy(market,ms) {
 // Sell function
 // -------------
 function sellMarket(market, time) {
-	logger.info(`Selling ${market.name} at ${market.change}%`);
-	reporter.info(`Selling ${market.name} at ${market.change}%`);
+	logger.info(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
+	reporter.info(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
 	for (let p=0; p<purchases.length; p++) {
 		if (purchases[p].name == market.name) {
 			for (var mymarket of myMarkets) {
@@ -355,8 +361,8 @@ function sellMarket(market, time) {
 					reporter.info(`MyCurrt Value: ${mymarket.last}, Bought at: ${purchases[p].price}`);
 					var profit = pdiff(market.last, purchases[p].price);
 					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
-					logger.info(`Profited ${profit}% from ${mymarket.name}`);
-					reporter.info(`Profited ${profit}% from ${mymarket.name}`);
+					logger.info(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
+					reporter.info(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
 				}
 			}
 			purchases.splice(p,1);
