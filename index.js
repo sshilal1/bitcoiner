@@ -1,14 +1,15 @@
 // --------------
 // User variables
 // --------------
-var buyThreshold = process.argv[2];
-var sellThreshold = process.argv[3];
-var ceilingThreshold = process.argv[4];
-var lossThreshold = process.argv[5];
+var buyThreshold = process.argv[2] || 30;
+var sellThreshold = process.argv[3] || 50;
+var ceilingThreshold = process.argv[4] || 7;
+var lossThreshold = process.argv[5] || 10;
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
 var jsonfile = require('jsonfile');
+var _ = require('lodash');
 const bittrex = require('node-bittrex-api');
 const api = require('./api');
 bittrex.options({ 
@@ -315,7 +316,28 @@ function printData() {
 	wb.write('report.xlsx');
 }
 function printJson() {
-	jsonfile.writeFileSync("history.json", marketHistory);
+
+	var topMarketsJson = [];
+	var tickCounts = _.size(marketHistory['USDT-BTC']);
+
+	for (let j=1; j<tickCounts; j++) {
+		var query = {
+			time: timestampHash[j]
+		};
+		for (let i=0; i<10; i++) {
+			var name = myMarkets[i].name;
+			var ticker = _.find(marketHistory[name], function(o) {return o.t == j} );
+			if (typeof(ticker) != undefined) {
+				query[name] = ticker.v;
+			}
+			else {
+				query[name] = null;
+			}
+		}
+		topMarketsJson.push(query);
+	}
+
+	jsonfile.writeFileSync(`${filename}_history.json`, topMarketsJson);
 }
 // -------------
 // Print at node close

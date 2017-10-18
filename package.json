@@ -16,6 +16,7 @@
     "jsonfile": "^4.0.0",
     "jsonlines": "^0.1.1",
     "keypress": "^0.2.1",
+    "lodash": "^4.17.4",
     "node-bittrex-api": "^0.7.6",
     "winston": "^2.3.1"
   }
