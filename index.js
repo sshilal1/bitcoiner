@@ -315,7 +315,7 @@ function printData() {
 	wb.write('report.xlsx');
 }
 function printJson() {
-
+	jsonfile.writeFileSync("history.json", marketHistory);
 }
 // -------------
 // Print at node close
