@@ -306,7 +306,7 @@ function reportOn(newchange,market) {
 function pdiff(first,second) {
 	var firstN = parseFloat(first,10);
 	var secondN = parseFloat(second,10);
-	var answer = (((firstN - secondN) * 100) / firstN).toFixed(2);
+	var answer = (((firstN - secondN) * 100) / ((firstN + secondN) / 2)).toFixed(2);
 	return parseFloat(answer,10);
 }
 // -------------
