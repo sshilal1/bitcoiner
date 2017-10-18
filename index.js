@@ -5,6 +5,7 @@ var buyThreshold = process.argv[2] || 30;
 var sellThreshold = process.argv[3] || 50;
 var ceilingThreshold = process.argv[4] || 7;
 var lossThreshold = process.argv[5] || 10;
+var reRun = process.argv[6] || false;
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 var xl = require('excel4node');
@@ -64,51 +65,166 @@ var purchases = [];
 var marketHistory = {};
 // Hash of timestamps (1=12:45, 2=12:48)
 var timestampHash = {};
+// Iteration Count, need for both execution types
+var iteration = 0;
 // --------------
 // Initial gather
 // --------------
-bittrex.getmarketsummaries(function(markets) {
-
-	var d = new Date();
-	var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
-	timestampHash["1"] = timestamp;
-
-	for (var market of markets.result) {
-		var obj = {
-			name: market.MarketName,
-			start: market.Last,
-			last: market.Last,
-			ask: market.Ask,
-			low: market.Low,
-			top: 0,
-			st: false,
-			bought: false,
-			sold: false
-		}
-		// st = sell threshold
-		myMarkets.push(obj);
-		marketHistory[market.MarketName] = [];
-		marketHistory[market.MarketName].push({t:1,v:market.Last});
-	}
-})
-// -------------
-// Interval Query
-// --------------
-var iteration = 0;
-var minutesToRecordAfterBuying = 30;
-var msAfterBuying = minutesToRecordAfterBuying * 60000;
-
-setInterval(function() {
-	iteration++;
+if (!reRun) {
 	bittrex.getmarketsummaries(function(markets) {
 
 		var d = new Date();
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
-		var msTime = d.getTime();
-		timestampHash[iteration.toString()] = timestamp;
+		timestampHash["1"] = timestamp;
 
-		if (markets) {
-			for (var market of markets.result) {
+		for (var market of markets.result) {
+			var obj = {
+				name: market.MarketName,
+				start: market.Last,
+				last: market.Last,
+				ask: market.Ask,
+				low: market.Low,
+				top: 0,
+				st: false,
+				bought: false,
+				sold: false
+			}
+			// st = sell threshold
+			myMarkets.push(obj);
+			marketHistory[market.MarketName] = [];
+			marketHistory[market.MarketName].push({t:1,v:market.Last});
+		}
+	})
+	// -------------
+	// Interval Query
+	// --------------
+	var minutesToRecordAfterBuying = 30;
+	var msAfterBuying = minutesToRecordAfterBuying * 60000;
+	setInterval(function() {
+		iteration++;
+		bittrex.getmarketsummaries(function(markets) {
+
+			var d = new Date();
+			var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+			var msTime = d.getTime();
+			timestampHash[iteration.toString()] = timestamp;
+
+			if (markets) {
+				for (var market of markets.result) {
+					for (var mymarket of myMarkets) {
+						if (mymarket.name === market.MarketName) {
+							var newPctChange = (((market.Last - mymarket["start"]) * 100)/market.Last).toFixed(2);
+							var twenty4HrCHange = (((market.Last - mymarket["low"]) * 100)/market.Last).toFixed(2);
+							if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
+							mymarket.change = newPctChange;
+							mymarket.last = market.Last;
+							mymarket.ask = market.Ask;
+							mymarket.low = market.Low;
+							marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
+
+							for (var purchase of purchases) {
+								if (purchase.name === mymarket.name) {
+									reportOn(newPctChange,mymarket);
+									purchase.change = newPctChange;
+									var purchaseTime = parseInt(purchase.time,10);
+									if ((purchaseTime + msAfterBuying) < msTime) {
+										reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
+									}
+								}
+							}
+
+							var floatPctChange = parseFloat(newPctChange,10);
+							var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
+							var buyDip = (buyThreshold - floatPctChange).toFixed(2);
+
+							if (floatPctChange > sellThreshold) {
+								mymarket.st = true;
+							}
+
+							if ((floatPctChange > buyThreshold) && !mymarket.bought) {
+								mymarket.bought = true;
+								buyMarket(mymarket,msTime);
+								//asyncKickOffBuy(mymarket,msTime);
+								// Here we should be spinning off a separate async function to watch this
+							}
+
+							else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
+								reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
+								sellMarket(mymarket,timestamp);
+							}
+
+							else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
+								reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
+								sellMarket(mymarket,timestamp);
+							}
+						}
+					}
+				}
+				myMarkets.sort(function(a,b) { return b.change - a.change});
+				purchases.sort(function(a,b) { return b.change - a.change});
+				console.log(`Time: ${timestamp}`);
+
+				// Leaders interval
+				var longLeaderString = "Leaders: ";
+				for (let i=0; i<5; i++) {			
+					var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
+					if (i<3) { longLeaderString += leaderStr + " | "; }
+				}
+				logger.info(longLeaderString);
+
+				// Bought interval
+				if (purchases.length > 0) {
+					var purchaseStr = "Bought : ";
+					for (var purchase in purchases) {
+						purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
+					}
+					logger.info(purchaseStr);
+				}
+			}
+			else {
+				logger.info("No Query at " +timestamp);
+			}
+		})
+	},5000);
+}
+
+else {
+	var file = "10.18.117__b30s50c7__13-57-28_history.json";
+	jsonfile.readFile(file, function(err, obj) {
+
+		var mfirstQuery = obj[0];
+		for (var thing in mfirstQuery) {
+			if (thing != 'time') {
+				var myObj = {
+					name: thing,
+					start: mfirstQuery[thing],
+					last: mfirstQuery[thing],
+					top: 0,
+					st: false,
+					bought: false,
+					sold: false
+				}
+				myMarkets.push(myObj);
+			}
+		}
+
+		for (var query of obj) {
+			iteration++;
+			// Here is main loop
+			console.log("loop no:", iteration);
+			var markets = [];
+
+			for (var row in query) {
+				if (row != 'time') {
+					var obj = {
+						MarketName : row,
+						Last : query[row]
+					}				
+					markets.push(obj);
+				}
+			}
+
+			for (var market of markets) {
 				for (var mymarket of myMarkets) {
 					if (mymarket.name === market.MarketName) {
 						var newPctChange = (((market.Last - mymarket["start"]) * 100)/market.Last).toFixed(2);
@@ -116,18 +232,11 @@ setInterval(function() {
 						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
 						mymarket.change = newPctChange;
 						mymarket.last = market.Last;
-						mymarket.ask = market.Ask;
-						mymarket.low = market.Low;
-						marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
 
 						for (var purchase of purchases) {
 							if (purchase.name === mymarket.name) {
 								reportOn(newPctChange,mymarket);
 								purchase.change = newPctChange;
-								var purchaseTime = parseInt(purchase.time,10);
-								if ((purchaseTime + msAfterBuying) < msTime) {
-									reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
-								}
 							}
 						}
 
@@ -142,8 +251,6 @@ setInterval(function() {
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
 							mymarket.bought = true;
 							buyMarket(mymarket,msTime);
-							//asyncKickOffBuy(mymarket,msTime);
-							// Here we should be spinning off a separate async function to watch this
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
@@ -159,31 +266,9 @@ setInterval(function() {
 				}
 			}
 			myMarkets.sort(function(a,b) { return b.change - a.change});
-			purchases.sort(function(a,b) { return b.change - a.change});
-			console.log(`Time: ${timestamp}`);
-
-			// Leaders interval
-			var longLeaderString = "Leaders: ";
-			for (let i=0; i<5; i++) {			
-				var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
-				if (i<3) { longLeaderString += leaderStr + " | "; }
-			}
-			logger.info(longLeaderString);
-
-			// Bought interval
-			if (purchases.length > 0) {
-				var purchaseStr = "Bought : ";
-				for (var purchase in purchases) {
-					purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
-				}
-				logger.info(purchaseStr);
-			}
-		}
-		else {
-			logger.info("No Query at " +timestamp);
 		}
 	})
-},5000);
+}
 // -------------
 // -------------
 // -------------
@@ -336,6 +421,8 @@ function printJson() {
 		}
 		topMarketsJson.push(query);
 	}
+
+	var historyname = 'b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold;
 
 	jsonfile.writeFileSync(`${filename}_history.json`, topMarketsJson);
 }
