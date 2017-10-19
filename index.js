@@ -110,7 +110,6 @@ if (!reRun) {
 	var minutesToRecordAfterBuying = 30;
 	var msAfterBuying = minutesToRecordAfterBuying * 60000;
 	setInterval(function() {
-		iteration++;
 		bittrex.getmarketsummaries(function(markets) {
 
 			var d = new Date();
@@ -119,6 +118,7 @@ if (!reRun) {
 
 			if (markets) {
 
+				iteration++;
 				timestampHash[iteration.toString()] = timestamp;
 
 				for (var market of markets.result) {
@@ -196,7 +196,7 @@ if (!reRun) {
 				logger.info("No Query at " +timestamp);
 			}
 		})
-	},2000);
+	},5000);
 }
 
 else {
@@ -428,7 +428,7 @@ function printJson() {
 		for (let i=0; i<10; i++) {
 			var name = myMarkets[i].name;
 			var ticker = _.find(marketHistory[name], function(o) {return o.t == j} );
-			errorlogs.info(`j:${j} ticker:${ticker.toString()}`);
+			//errorlogs.info(`j:${j} ticker:${ticker.toString()}`);
 
 			if (typeof(ticker) != undefined) {
 				query[name] = ticker.v;
