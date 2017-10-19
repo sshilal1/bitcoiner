@@ -139,7 +139,7 @@ if (!reRun) {
 									purchase.change = newPctChange;
 									var purchaseTime = parseInt(purchase.time,10);
 									if ((purchaseTime + msAfterBuying) < msTime) {
-										reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
+										//reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
 									}
 								}
 							}
@@ -160,12 +160,12 @@ if (!reRun) {
 							}
 
 							else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-								reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
+								//reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
 								sellMarket(mymarket,timestamp);
 							}
 
 							else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-								reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
+								//reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
 								sellMarket(mymarket,timestamp);
 							}
 						}
@@ -367,8 +367,6 @@ function sellMarket(market, time) {
 			for (var mymarket of myMarkets) {
 				if (mymarket.name == market.name) {
 					mymarket.sold = true;
-					reporter.info(`Current Value: ${market.last}, Bought at: ${purchases[p].price}`);
-					reporter.info(`MyCurrt Value: ${mymarket.last}, Bought at: ${purchases[p].price}`);
 					var profit = pdiff(market.last, purchases[p].price);
 					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
 					logger.info(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
