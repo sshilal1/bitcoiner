@@ -146,7 +146,7 @@ if (!reRun) {
 
 							var floatPctChange = parseFloat(newPctChange,10);
 							var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-							var buyDip = (buyThreshold - floatPctChange).toFixed(2);
+							var buyDip = parseFloat((buyThreshold - floatPctChange).toFixed(2),10);
 
 							if (floatPctChange > sellThreshold) {
 								mymarket.st = true;
