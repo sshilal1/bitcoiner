@@ -1,13 +1,43 @@
 var fs = require('fs');
 var jsonlines = require('jsonlines');
-
 var rerun = process.argv[2];
 
-var filepath = './logs/10.18.117__b3s5c2__15-28-53__report.log';
+var filepath = '';
+//-------------------
+// find the file path
+//-------------------
+var dir = './logs'; // your directory
+fs.readdir(dir, function(err, files){
+	files = files.map(function (fileName) {
+	return {
+		name: fileName,
+		time: fs.statSync(dir + '/' + fileName).mtime.getTime()
+	};
+	})
+	.sort(function (a, b) {
+		return b.time - a.time;
+	})
+	.filter(function (f) {
+		return f.name.includes('report');
+	})
+	.map(function (v) {
+		return v.name;
+	})
+	filepath = './logs/' + files[0];
+	console.log(filepath);
+
+	fs.readFile(filepath, 'utf8', function (err, data) {
+	  if (err) throw err;
+	  parser.write(data);
+	  fs.writeFile('test.txt',reportStr, function(error) {
+	  	if (error) throw error;
+	  })
+	});
+});
+//-------------------
 
 var parser = jsonlines.parse();
 var reportStr = '';
-
 parser.on('data', function (data) {
 	if (rerun == 'rerun') {
 		var regex = /(.+) timestamp:(.*)/g;
@@ -28,10 +58,3 @@ parser.on('end', function () {
   console.log('No more data');
 })
 
-fs.readFile(filepath, 'utf8', function (err, data) {
-  if (err) throw err;
-  parser.write(data);
-  fs.writeFile('test.txt',reportStr, function(error) {
-  	if (error) throw error;
-  })
-});
