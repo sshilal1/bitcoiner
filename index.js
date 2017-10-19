@@ -76,6 +76,8 @@ var marketHistory = {};
 var timestampHash = {};
 // Iteration Count, need for both execution types
 var iteration = 0;
+// History file name'
+var historyFileName = 'logs/market-history_' + filename + '.json';
 // --------------
 // Initial gather
 // --------------
@@ -85,6 +87,12 @@ if (!reRun) {
 		var d = new Date();
 		var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 		timestampHash["1"] = timestamp;
+
+		var timestampnum = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;
+		var historyArray = [];
+		var initObj = {
+			time : timestampnum
+		}
 
 		for (var market of markets.result) {
 			var obj = {
@@ -100,9 +108,17 @@ if (!reRun) {
 			}
 			// st = sell threshold
 			myMarkets.push(obj);
-			marketHistory[market.MarketName] = [];
-			marketHistory[market.MarketName].push({t:1,v:market.Last});
+
+			initObj[market.MarketName] = market.Last
+			//marketHistory[market.MarketName] = [];
+			//marketHistory[market.MarketName].push({t:1,v:market.Last});
 		}
+
+		historyArray.push(initObj);
+
+		fs.writeFile(historyFileName, JSON.stringify(historyArray), (err) => {
+			if (err) throw err;
+		})
 	})
 	// -------------
 	// Interval Query
@@ -131,7 +147,7 @@ if (!reRun) {
 							mymarket.last = market.Last;
 							mymarket.ask = market.Ask;
 							mymarket.low = market.Low;
-							marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
+							//marketHistory[mymarket.name].push({t:iteration,v:mymarket.last});
 
 							for (var purchase of purchases) {
 								if (purchase.name === mymarket.name) {
