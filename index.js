@@ -77,7 +77,7 @@ var timestampHash = {};
 // Iteration Count, need for both execution types
 var iteration = 0;
 // History file name'
-var historyFileName = 'logs/market-history_' + filename + '.json';
+var historyFileName = './logs/market-history_' + filename + '.json';
 // --------------
 // Initial gather
 // --------------
@@ -136,6 +136,10 @@ if (!reRun) {
 
 				iteration++;
 				timestampHash[iteration.toString()] = timestamp;
+				var timestampthis = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;
+				var thisobj = {
+					time : timestampthis
+				}
 
 				for (var market of markets.result) {
 					for (var mymarket of myMarkets) {
@@ -186,6 +190,8 @@ if (!reRun) {
 							}
 						}
 					}
+					// write to file
+					thisobj[market.MarketName] = market.Last;
 				}
 				myMarkets.sort(function(a,b) { return b.change - a.change});
 				purchases.sort(function(a,b) { return b.change - a.change});
@@ -207,6 +213,15 @@ if (!reRun) {
 					}
 					logger.info(purchaseStr);
 				}
+
+				// Write data to history file
+				var arr = require(historyFileName);
+				arr.push(thisobj);
+				fs.writeFile(historyFileName, JSON.stringify(arr), (err) => {
+					if (err) throw err;
+					console.log("wrote data at ", timestampthis);
+				});
+
 			}
 			else {
 				logger.info("No Query at " +timestamp);
