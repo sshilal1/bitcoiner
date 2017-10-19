@@ -52,6 +52,15 @@ var reporter = new (winston.Logger)({
 		})
 	]
 })
+
+var errorlogs = new (winston.Logger)({
+	transports: [
+		new (winston.transports.File)({
+			filename: `${logDir}/${filename}__error.log`,
+			timestamp: tsFormat,
+		})
+	]
+})
 /****************
 // --------------
 Begin Application
@@ -107,9 +116,11 @@ if (!reRun) {
 			var d = new Date();
 			var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 			var msTime = d.getTime();
-			timestampHash[iteration.toString()] = timestamp;
 
 			if (markets) {
+
+				timestampHash[iteration.toString()] = timestamp;
+
 				for (var market of markets.result) {
 					for (var mymarket of myMarkets) {
 						if (mymarket.name === market.MarketName) {
@@ -185,7 +196,7 @@ if (!reRun) {
 				logger.info("No Query at " +timestamp);
 			}
 		})
-	},5000);
+	},2000);
 }
 
 else {
@@ -417,6 +428,8 @@ function printJson() {
 		for (let i=0; i<10; i++) {
 			var name = myMarkets[i].name;
 			var ticker = _.find(marketHistory[name], function(o) {return o.t == j} );
+			errorlogs.info(`j:${j} ticker:${ticker.toString()}`);
+
 			if (typeof(ticker) != undefined) {
 				query[name] = ticker.v;
 			}
@@ -429,7 +442,7 @@ function printJson() {
 
 	var historyname = 'b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold;
 
-	jsonfile.writeFileSync(`${filename}_history.json`, topMarketsJson);
+	jsonfile.writeFileSync(`${historyname}_history.json`, topMarketsJson);
 }
 // -------------
 // Print at node close
