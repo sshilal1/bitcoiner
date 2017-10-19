@@ -200,7 +200,7 @@ if (!reRun) {
 }
 
 else {
-	var file = "10.18.117__b3s5c2__15-20-33_history.json";
+	var file = "b30s50c7l10_history.json";
 	jsonfile.readFile(file, function(err, obj) {
 
 		var mfirstQuery = obj[0];
@@ -256,32 +256,49 @@ else {
 
 						var floatPctChange = parseFloat(newPctChange,10);
 						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-						var buyDip = (buyThreshold - floatPctChange).toFixed(2);
+						var buyDip = parseFloat((buyThreshold - floatPctChange).toFixed(2));
 
 						if (floatPctChange > sellThreshold) {
-							console.log(floatPctChange);
+							//console.log(floatPctChange);
 							mymarket.st = true;
 						}
 
 						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
-							console.log("buy?");
+							//console.log("buy?");
 							mymarket.bought = true;
 							buyMarket(mymarket,timestamp);
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-							reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
+							//reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
 							sellMarket(mymarket,timestamp);
 						}
 
 						else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-							reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
+							//reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
 							sellMarket(mymarket,timestamp);
 						}
 					}
 				}
 			}
 			myMarkets.sort(function(a,b) { return b.change - a.change});
+
+			// Leaders interval
+			var longLeaderString = "Leaders: ";
+			for (let i=0; i<5; i++) {			
+				var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
+				if (i<3) { longLeaderString += leaderStr + " | "; }
+			}
+			logger.info(longLeaderString);
+
+			// Bought interval
+			if (purchases.length > 0) {
+				var purchaseStr = "Bought : ";
+				for (var purchase in purchases) {
+					purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
+				}
+				logger.info(purchaseStr);
+			}
 		}
 	})
 }
