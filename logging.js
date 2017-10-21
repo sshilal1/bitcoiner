@@ -1,7 +1,10 @@
+
 const logDir = 'logs';
 const fs = require('fs');
 const winston = require('winston');
 
+
+// need to further modulate
 class mylog {
 	constructor(bt,st,ct,lt) {
 		var d = new Date()
