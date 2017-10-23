@@ -8,9 +8,10 @@ var lossThreshold = process.argv[5] || 10;
 var reRun = process.argv[6] || false;
 //var lowOrStart = process.argv[5] || "start";
 // --------------
-var xl = require('excel4node');
-var jsonfile = require('jsonfile');
-var _ = require('lodash');
+const xl = require('excel4node');
+const jsonfile = require('jsonfile');
+const _ = require('lodash');
+const fs = require('fs');
 const bittrex = require('node-bittrex-api');
 const api = require('./api');
 bittrex.options({ 
@@ -21,46 +22,15 @@ bittrex.options({
 // --------------------
 // Setup Logging
 // --------------------
-const logDir = 'logs';
-const fs = require('fs');
-// Create the log directory if it does not exist
-if (!fs.existsSync(logDir)) {
-	fs.mkdirSync(logDir);
-}
+const logging = require('./logging');
 
-const tsFormat = () => (new Date()).toLocaleString();
-var d = new Date();
-var filename = (d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'__b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'__'+d.getHours()+'-'+d.getMinutes()+'-'+d.getSeconds();
-var winston = require('winston');
-var logger = new (winston.Logger)({
-  transports: [
-		new (winston.transports.Console)({
-			colorize: true,
-			level: 'info'
-		}),
-    new (winston.transports.File)({
-			filename: `${logDir}/${filename}.log`,
-			timestamp: tsFormat,
-		})
-	]
-});
-var reporter = new (winston.Logger)({
-	transports: [
-		new (winston.transports.File)({
-			filename: `${logDir}/${filename}__report.log`,
-			timestamp: tsFormat,
-		})
-	]
-})
+var logger = new logging.consoleLog(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
+logger.create();
 
-var errorlogs = new (winston.Logger)({
-	transports: [
-		new (winston.transports.File)({
-			filename: `${logDir}/${filename}__error.log`,
-			timestamp: tsFormat,
-		})
-	]
-})
+var reporter = new logging.log(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
+var errorlogs = new logging.log(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
+reporter.create('report');
+errorlogs.create('error');
 /****************
 // --------------
 Begin Application
@@ -77,6 +47,9 @@ var timestampHash = {};
 // Iteration Count, need for both execution types
 var iteration = 0;
 // History file name'
+var d = new Date()
+var time = `${d.getHours().toString().padStart(2,0)}.${d.getMinutes().toString().padStart(2,0)}.${d.getSeconds().toString().padStart(2,0)}`;
+var filename = ('b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold+'_'+d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
 var historyFileName = './logs/market-history_' + filename + '.json';
 // --------------
 // Initial gather
@@ -159,7 +132,7 @@ if (!reRun) {
 									purchase.change = newPctChange;
 									var purchaseTime = parseInt(purchase.time,10);
 									if ((purchaseTime + msAfterBuying) < msTime) {
-										//reporter.info(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
+										//reporter.write(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
 									}
 								}
 							}
@@ -180,12 +153,12 @@ if (!reRun) {
 							}
 
 							else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-								//reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
+								//reporter.write(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
 								sellMarket(mymarket,timestamp);
 							}
 
 							else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-								//reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
+								//reporter.write(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
 								sellMarket(mymarket,timestamp);
 							}
 						}
@@ -203,7 +176,7 @@ if (!reRun) {
 					var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
 					if (i<3) { longLeaderString += leaderStr + " | "; }
 				}
-				logger.info(longLeaderString);
+				logger.write(longLeaderString);
 
 				// Bought interval
 				if (purchases.length > 0) {
@@ -211,7 +184,7 @@ if (!reRun) {
 					for (var purchase in purchases) {
 						purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
 					}
-					logger.info(purchaseStr);
+					logger.write(purchaseStr);
 				}
 
 				// Write data to history file
@@ -224,7 +197,7 @@ if (!reRun) {
 
 			}
 			else {
-				logger.info("No Query at " +timestamp);
+				logger.write("No Query at " +timestamp);
 			}
 		})
 	},5000);
@@ -301,12 +274,12 @@ else {
 						}
 
 						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-							//reporter.info(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
+							//reporter.write(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
 							sellMarket(mymarket,timestamp);
 						}
 
 						else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-							//reporter.info(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
+							//reporter.write(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
 							sellMarket(mymarket,timestamp);
 						}
 					}
@@ -320,7 +293,7 @@ else {
 				var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
 				if (i<3) { longLeaderString += leaderStr + " | "; }
 			}
-			logger.info(longLeaderString);
+			logger.write(longLeaderString);
 
 			// Bought interval
 			if (purchases.length > 0) {
@@ -328,7 +301,7 @@ else {
 				for (var purchase in purchases) {
 					purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
 				}
-				logger.info(purchaseStr);
+				logger.write(purchaseStr);
 			}
 		}
 	})
@@ -352,16 +325,16 @@ function reportOn(newchange,market) {
 	var oldchange = market.change;
 
 	if (oldchange <= cross5 && newchange >= cross5) {
-		reporter.info(`${market.name} Crossing 5% gain from ${oldchange}% to ${newchange}%`);
+		reporter.write(`${market.name} Crossing 5% gain from ${oldchange}% to ${newchange}%`);
 	}
 	else if (newchange <= dip5 && oldchange >= dip5) {
-		reporter.info(`${market.name} Dipping 5% loss from ${oldchange}% to ${newchange}%`);
+		reporter.write(`${market.name} Dipping 5% loss from ${oldchange}% to ${newchange}%`);
 	}
 	else if (oldchange <= cross10 && newchange >= cross10) {
-		reporter.info(`${market.name} Crossing 10% gain from ${oldchange}% to ${newchange}%`);
+		reporter.write(`${market.name} Crossing 10% gain from ${oldchange}% to ${newchange}%`);
 	}
 	else if (newchange <= dip10 && oldchange >= dip10) {
-		reporter.info(`${market.name} Dipping 10% loss from ${oldchange}% to ${newchange}%`);
+		reporter.write(`${market.name} Dipping 10% loss from ${oldchange}% to ${newchange}%`);
 	}
 }
 // -------------
@@ -378,8 +351,8 @@ function pdiff(first,second) {
 // -------------
 function buyMarket(market,msTime,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
-	logger.info(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
-	reporter.info(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
+	logger.write(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
+	reporter.write(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
 	purchases.push({
 		name : market.name,
 		amount : 1,
@@ -390,7 +363,7 @@ function buyMarket(market,msTime,amount) {
 }
 
 function asyncKickOffBuy(market,ms) {
-	reporter.info(`Buying ${market.name} at ${market.change}%`);
+	reporter.write(`Buying ${market.name} at ${market.change}%`);
 	var timer = setInterval(buyish, 5000);
 	var sold = false;
 	function buyish() {
@@ -408,8 +381,8 @@ function asyncKickOffBuy(market,ms) {
 // Sell function
 // -------------
 function sellMarket(market, time) {
-	logger.info(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
-	reporter.info(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
+	logger.write(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
+	reporter.write(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
 	for (let p=0; p<purchases.length; p++) {
 		if (purchases[p].name == market.name) {
 			for (var mymarket of myMarkets) {
@@ -417,8 +390,8 @@ function sellMarket(market, time) {
 					mymarket.sold = true;
 					var profit = pdiff(market.last, purchases[p].price);
 					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
-					logger.info(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
-					reporter.info(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
+					logger.write(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
+					reporter.write(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
 				}
 			}
 			purchases.splice(p,1);
@@ -474,7 +447,7 @@ function printJson() {
 		for (let i=0; i<10; i++) {
 			var name = myMarkets[i].name;
 			var ticker = _.find(marketHistory[name], function(o) {return o.t == j} );
-			//errorlogs.info(`j:${j} ticker:${ticker.toString()}`);
+			//errorlogs.write(`j:${j} ticker:${ticker.toString()}`);
 
 			if (typeof(ticker) != undefined) {
 				query[name] = ticker.v;

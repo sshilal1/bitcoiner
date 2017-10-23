@@ -2,6 +2,11 @@ const logDir = 'logs';
 const fs = require('fs');
 const winston = require('winston');
 
+// Create the log directory if it does not exist
+if (!fs.existsSync(logDir)) {
+	fs.mkdirSync(logDir);
+}
+
 class log {
 	constructor(bt,st,ct,lt) {
 		var d = new Date()
