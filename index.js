@@ -380,8 +380,8 @@ function asyncKickOffBuy(market,ms) {
 // Sell function
 // -------------
 function sellMarket(market, time) {
-	logger.write(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
-	reporter.write(`Selling ${market.name} at ${market.change}% timestamp:${time}`);
+	logger.write(`Selling ${market.name} at ${market.change}%`);
+	reporter.write(`Selling ${market.name} at ${market.change}%`);
 	for (let p=0; p<purchases.length; p++) {
 		if (purchases[p].name == market.name) {
 			for (var mymarket of myMarkets) {
@@ -389,8 +389,8 @@ function sellMarket(market, time) {
 					mymarket.sold = true;
 					var profit = pdiff(market.last, purchases[p].price);
 					//var profit = ((market.last - purchases[p].price) * 100 / market.last).toFixed(2);
-					logger.write(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
-					reporter.write(`Profited ${profit}% from ${mymarket.name} timestamp:${time}`);
+					logger.write(`Profited ${profit}% from ${mymarket.name}`);
+					reporter.write(`Profited ${profit}% from ${mymarket.name}`);
 				}
 			}
 			purchases.splice(p,1);
