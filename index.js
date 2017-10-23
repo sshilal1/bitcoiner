@@ -22,7 +22,7 @@ bittrex.options({
 // --------------------
 // Setup Logging
 // --------------------
-const logging = require('./logging');
+const logging = require('./lib/logging');
 
 var logger = new logging.consoleLog(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
 logger.create();
@@ -192,7 +192,6 @@ if (!reRun) {
 				arr.push(thisobj);
 				fs.writeFile(historyFileName, JSON.stringify(arr), (err) => {
 					if (err) throw err;
-					console.log("wrote data at ", timestampthis);
 				});
 
 			}
