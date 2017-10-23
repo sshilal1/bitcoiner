@@ -1,11 +1,9 @@
-
 const logDir = 'logs';
 const fs = require('fs');
 const winston = require('winston');
 
-
 // need to further modulate
-class mylog {
+class log {
 	constructor(bt,st,ct,lt) {
 		var d = new Date()
 		var time = `${d.getHours().toString().padStart(2,0)}.${d.getMinutes().toString().padStart(2,0)}.${d.getSeconds().toString().padStart(2,0)}`;
@@ -13,14 +11,40 @@ class mylog {
 	}
 
 	// create the log file
-	create() {
+	create(name) {
+		var logType = name ? (`_${name}.log`) : '.log';
+		var filename = this.filename;
+		var tsFormat = () => (new Date()).toLocaleString();
 
+		console.log("Creating log file: ", filename);
+
+		this.logger = new (winston.Logger)({
+			transports: [
+				new (winston.transports.File)({
+					filename: `${logDir}/${filename}${logType}`,
+					timestamp: tsFormat,
+				})
+			]
+		})
 	}
 
-	// everytime we want to write to the file
-	write(str) {
-
+	write(message) {
+		this.logger.info(message);
 	}
 }
 
-module.exports = {mylog};
+module.exports = {log};
+
+/*
+var logger = new (winston.Logger)({
+  transports: [
+		new (winston.transports.Console)({
+			colorize: true,
+			level: 'info'
+		}),
+    new (winston.transports.File)({
+			filename: `${logDir}/${filename}.log`,
+			timestamp: tsFormat,
+		})
+	]
+});*/
