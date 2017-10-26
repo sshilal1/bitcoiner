@@ -350,8 +350,8 @@ function pdiff(first,second) {
 // -------------
 function buyMarket(market,msTime,amount) {
 	// Will eventually require padding (check next few seconds to make sure correct buy and not a fluke)
-	logger.write(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
-	reporter.write(`Buying ${market.name} at ${market.change}% timestamp:${msTime}`);
+	logger.write(`Buying ${market.name} at ${market.change}%`);
+	reporter.write(`Buying ${market.name} at ${market.change}%`);
 	purchases.push({
 		name : market.name,
 		amount : 1,
