@@ -29,9 +29,10 @@ fs.readdir(dir, function(err, files){
 	fs.readFile(filepath, 'utf8', function (err, data) {
 	  if (err) throw err;
 	  parser.write(data);
-	  fs.writeFile('test.txt',reportStr, function(error) {
+	  
+	  /*fs.writeFile('test.txt',reportStr, function(error) {
 	  	if (error) throw error;
-	  })
+	  })*/
 	});
 });
 //-------------------
