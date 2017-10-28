@@ -7,6 +7,7 @@ var ceilingThreshold = process.argv[4] || 7;
 var lossThreshold = process.argv[5] || 10;
 var reRun = process.argv[6] || false;
 buyThreshold = parseInt(buyThreshold,10);
+sellThreshold = parseInt(sellThreshold,10);
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 const xl = require('excel4node');
@@ -69,27 +70,26 @@ if (!reRun) {
 		}
 
 		for (var market of markets.result) {
-			var pctChange = pdiff(market.Last, market.Low);
-			if (pctChange > buyThreshold+5) { neverbuy = true; }
-			else { neverbuy = false; }
-			var obj = {
-				name: market.MarketName,
-				start: market.Last,
-				last: market.Last,
-				ask: market.Ask,
-				low: market.Low,
-				top: 0,
-				neverbuy: neverbuy,
-				st: false,
-				bought: false,
-				sold: false
-			}
-			// st = sell threshold
-			myMarkets.push(obj);
+			if (!market.MarketName.includes('ETH')) {
+				var pctChange = pdiff(market.Last, market.Low);
+				if (pctChange > buyThreshold+5) { neverbuy = true; }
+				else { neverbuy = false; }
+				var obj = {
+					name: market.MarketName,
+					start: market.Last,
+					last: market.Last,
+					ask: market.Ask,
+					low: market.Low,
+					top: 0,
+					neverbuy: neverbuy,
+					st: sellThreshold,
+					bought: false,
+					sold: false
+				}
+				myMarkets.push(obj);
 
-			initObj[market.MarketName] = market.Last
-			//marketHistory[market.MarketName] = [];
-			//marketHistory[market.MarketName].push({t:1,v:market.Last});
+				initObj[market.MarketName] = market.Last
+			}
 		}
 
 		historyArray.push(initObj);
@@ -109,6 +109,7 @@ if (!reRun) {
 			var d = new Date();
 			var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 			var msTime = d.getTime();
+			var rank = 0;
 
 			if (markets) {
 
@@ -120,66 +121,78 @@ if (!reRun) {
 				}
 
 				for (var market of markets.result) {
-					for (var mymarket of myMarkets) {
-						if (mymarket.name === market.MarketName) {
-							var newPctChange = pdiff(market.Last, mymarket["start"]);
-							var twenty4HrChange = pdiff(market.Last, mymarket["low"]);
-							
-							if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
-							mymarket.change = twenty4HrChange;
-							mymarket.ask = market.Ask;
-							mymarket.low = market.Low;
+					if (!market.MarketName.includes('ETH')) {
+						for (var mymarket of myMarkets) {
+							rank++;
+							if (mymarket.name === market.MarketName) {
+								var newPctChange = pdiff(market.Last, mymarket["start"]);
+								var twenty4HrChange = pdiff(market.Last, mymarket["low"]);
+								
+								if (twenty4HrChange > mymarket.change) { mymarket.top = twenty4HrChange; }
+								mymarket.change = twenty4HrChange;
+								mymarket.ask = market.Ask;
+								mymarket.low = market.Low;
 
-							var jumper = (mymarket.last < buyThreshold-1) && (mymarket.Last > buyThreshold+1);
-							mymarket.last = market.Last;
+								var jumper = (mymarket.last < buyThreshold-1) && (mymarket.Last > buyThreshold+1);
+								mymarket.last = market.Last;
+								
+								var floatPctChange = parseFloat(newPctChange,10);
+								var floatPct24Change = parseFloat(twenty4HrChange,10);
 
-							// if last tick was above 31, and we dont own it, dont buy
+								var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
+								var buyDip = parseFloat((buyThreshold - floatPct24Change).toFixed(2),10);
 
-							for (var purchase of purchases) {
-								if (purchase.name === mymarket.name) {
-									reportOn(newPctChange,mymarket);
-									purchase.change = newPctChange;
-									var purchaseTime = parseInt(purchase.time,10);
-									if ((purchaseTime + msAfterBuying) < msTime) {
-										//reporter.write(`${minutesToRecordAfterBuying} minutes have gone by since we bought ${purchase.name}... currently at ${newPctChange}%`);
+								// If the top 2 coins
+								if (rank < 3) {
+									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
+										mymarket.bought = true;
+										buyMarket(mymarket,msTime);
+									}
+									else if (jumper) {
+										mymarket.bought = true;
+										logger.write(`Jumper set for ${mymarket.name}`);
+										buyMarket(mymarket,msTime);
 									}
 								}
-							}
 
-							var floatPctChange = parseFloat(newPctChange,10);
-							var floatPct24Change = parseFloat(twenty4HrChange,10);
+								if (floatPct24Change > buyThreshold+10) {
+									mymarket.st = buyThreshold;
+								}
+								else if (floatPct24Change > buyThreshold+20) {
+									mymarket.st = buyThreshold + 10;
+								}
+								else if (floatPct24Change > buyThreshold+30) {
+									mymarket.st = buyThreshold + 20;
+								}
+								else if (floatPct24Change > buyThreshold+40) {
+									mymarket.st = buyThreshold + 35;
+								}
+								else if (floatPct24Change > buyThreshold+50) {
+									mymarket.st = buyThreshold + 45;
+								}
+								else if (floatPct24Change > buyThreshold+60) {
+									mymarket.st = buyThreshold + 55;
+								}
 
-							var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-							var buyDip = parseFloat((buyThreshold - floatPctChange).toFixed(2),10);
+								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
+									sellMarket(mymarket,timestamp);
+								}
+								else if (ceilingDip > mymarket.st) {
+									sellMarket(mymarket,timestamp);
+								}
 
-							if (floatPctChange > sellThreshold) {
-								mymarket.st = true;
-							}
+								// make it a 2% dip after 100
 
-							if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
-								mymarket.bought = true;
-								buyMarket(mymarket,msTime);
-								//asyncKickOffBuy(mymarket,msTime);
-								// Here we should be spinning off a separate async function to watch this
-							}
-							else if (jumper) {
-								logger.write(`Jumper set for ${mymarket.name}`);
-								buyMarket(mymarket,msTime);
-							}
-
-							else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-								//reporter.write(`${ceilingDip} crossing ceiling threshold dip of ${ceilingThreshold}%, selling for gains...`);
-								sellMarket(mymarket,timestamp);
-							}
-
-							else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-								//reporter.write(`${mymarket.name} at ${newPctChange}% crossing lossThreshold dip of ${lossThreshold}% (${buyDip}%), cutting losses...`);
-								sellMarket(mymarket,timestamp);
+								/*if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
+									sellMarket(mymarket,timestamp);
+								}
+								if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
+									sellMarket(mymarket,timestamp);
+								}*/
 							}
 						}
+						thisobj[market.MarketName] = market.Last;
 					}
-					// write to file
-					thisobj[market.MarketName] = market.Last;
 				}
 				myMarkets.sort(function(a,b) { return b.change - a.change});
 				purchases.sort(function(a,b) { return b.change - a.change});
@@ -353,7 +366,7 @@ function reportOn(newchange,market) {
 function pdiff(first,second) {
 	var firstN = parseFloat(first,10);
 	var secondN = parseFloat(second,10);
-	var answer = (((firstN - secondN) * 100) / ((firstN + secondN) / 2)).toFixed(2);
+	var answer = (((firstN / secondN) - 1) * 100).toFixed(2);
 	return parseFloat(answer,10);
 }
 // -------------
