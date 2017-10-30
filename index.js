@@ -71,7 +71,7 @@ if (!reRun) {
 
 		for (var market of markets.result) {
 			if (!market.MarketName.includes('ETH')) {
-				var pctChange = pdiff(market.Last, market.Low);
+				var pctChange = pdiff(market.Last, market.PrevDay);
 				if (pctChange > buyThreshold+5) { neverbuy = true; }
 				else { neverbuy = false; }
 				var obj = {
@@ -145,7 +145,7 @@ if (!reRun) {
 
 								// If the top 2 coins
 								if (rank < 3) {
-									//logger.write(`${mymarket.name} NeverBuy: ${mymarket.neverbuy} Bought: ${mymarket.bought}`);
+									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
 									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										mymarket.bought = true;
 										buyMarket(mymarket,msTime);
@@ -157,29 +157,27 @@ if (!reRun) {
 									}
 								}
 
-								if (floatPct24Change > buyThreshold+10) {
-									mymarket.st = buyThreshold;
-								}
-								else if (floatPct24Change > buyThreshold+20) {
-									mymarket.st = buyThreshold + 10;
-								}
-								else if (floatPct24Change > buyThreshold+30) {
-									mymarket.st = buyThreshold + 20;
-								}
-								else if (floatPct24Change > buyThreshold+40) {
-									mymarket.st = buyThreshold + 35;
+								// this sets the sell point to slightly below the buythreshold now that its crossed our gradient scale
+								if (floatPct24Change > buyThreshold+60) {
+									mymarket.st = buyThreshold + 55;
 								}
 								else if (floatPct24Change > buyThreshold+50) {
 									mymarket.st = buyThreshold + 45;
 								}
-								else if (floatPct24Change > buyThreshold+60) {
-									mymarket.st = buyThreshold + 55;
+								else if (floatPct24Change > buyThreshold+40) {
+									mymarket.st = buyThreshold + 35;
+								}
+								else if (floatPct24Change > buyThreshold+30) {
+									mymarket.st = buyThreshold + 20;
+								}
+								else if (floatPct24Change > buyThreshold+20) {
+									mymarket.st = buyThreshold + 10;
+								}
+								else if (floatPct24Change > buyThreshold+10) {
+									mymarket.st = buyThreshold;
 								}
 
-								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
-									sellMarket(mymarket,timestamp);
-								}
-								else if (ceilingDip > mymarket.st) {
+								if ((floatPct24Change >= mymarket.st) && mymarket.bought && !mymarket.sold) {
 									sellMarket(mymarket,timestamp);
 								}
 
