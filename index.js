@@ -180,6 +180,7 @@ if (!reRun) {
 								if ((floatPct24Change >= mymarket.st) && mymarket.bought && !mymarket.sold) {
 									sellMarket(mymarket,timestamp);
 								}
+								// need to rething sell
 
 								// make it a 2% dip after 100
 
