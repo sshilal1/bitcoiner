@@ -120,13 +120,14 @@ if (!reRun) {
 					time : timestampthis
 				}
 
-				for (var market of markets.result) {
-					if (!market.MarketName.includes('ETH')) {
-						for (var mymarket of myMarkets) {
-							rank++;
+				for (var mymarket of myMarkets) {
+					for (var market of markets.result) {
+						if (!market.MarketName.includes('ETH')) {
 							if (mymarket.name === market.MarketName) {
+								rank++;
 								var newPctChange = pdiff(market.Last, mymarket["start"]);
-								var twenty4HrChange = pdiff(market.Last, mymarket["low"]);
+								//var twenty4HrChange = pdiff(market.Last, mymarket["low"]);
+								var twenty4HrChange = pdiff(market.Last, market.PrevDay);
 								
 								if (twenty4HrChange > mymarket.change) { mymarket.top = twenty4HrChange; }
 								mymarket.change = twenty4HrChange;
@@ -144,6 +145,7 @@ if (!reRun) {
 
 								// If the top 2 coins
 								if (rank < 3) {
+									//logger.write(`${mymarket.name} NeverBuy: ${mymarket.neverbuy} Bought: ${mymarket.bought}`);
 									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										mymarket.bought = true;
 										buyMarket(mymarket,msTime);
