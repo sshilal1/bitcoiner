@@ -51,7 +51,7 @@ var iteration = 0;
 // History file name'
 var d = new Date()
 var time = `${d.getHours().toString().padStart(2,0)}.${d.getMinutes().toString().padStart(2,0)}.${d.getSeconds().toString().padStart(2,0)}`;
-var filename = ('b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold+'_'+d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
+var filename = 'b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold+'__'+(d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
 var historyFileName = './logs/market-history_' + filename + '.json';
 // --------------
 // Initial gather
@@ -203,7 +203,7 @@ if (!reRun) {
 				var longLeaderString = "Leaders: ";
 				for (let i=0; i<5; i++) {			
 					var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
-					if (i<5) { longLeaderString += leaderStr + " | "; }
+					if (i<4) { longLeaderString += leaderStr + " | "; }
 				}
 				logger.write(longLeaderString);
 
