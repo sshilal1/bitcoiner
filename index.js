@@ -2,12 +2,8 @@
 // User variables
 // --------------
 var buyThreshold = process.argv[2] || 30;
-var sellThreshold = process.argv[3] || 50;
-var ceilingThreshold = process.argv[4] || 7;
-var lossThreshold = process.argv[5] || 10;
-var reRun = process.argv[6] || false;
+var reRun = process.argv[3] || false;
 buyThreshold = parseInt(buyThreshold,10);
-sellThreshold = parseInt(sellThreshold,10);
 //var lowOrStart = process.argv[5] || "start";
 // --------------
 const xl = require('excel4node');
@@ -26,11 +22,11 @@ bittrex.options({
 // --------------------
 const logging = require('./lib/logging');
 
-var logger = new logging.consoleLog(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
+var logger = new logging.consoleLog(buyThreshold);
 logger.create();
 
-var reporter = new logging.log(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
-var errorlogs = new logging.log(buyThreshold,sellThreshold,ceilingThreshold,lossThreshold);
+var reporter = new logging.log(buyThreshold);
+var errorlogs = new logging.log(buyThreshold);
 reporter.create('report');
 errorlogs.create('error');
 /****************
@@ -51,7 +47,7 @@ var iteration = 0;
 // History file name'
 var d = new Date()
 var time = `${d.getHours().toString().padStart(2,0)}.${d.getMinutes().toString().padStart(2,0)}.${d.getSeconds().toString().padStart(2,0)}`;
-var filename = 'b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold+'__'+(d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
+var filename = 'b'+buyThreshold+'__'+(d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
 var historyFileName = './logs/market-history_' + filename + '.json';
 // --------------
 // Initial gather
@@ -82,7 +78,7 @@ if (!reRun) {
 					low: market.Low,
 					top: 0,
 					neverbuy: neverbuy,
-					st: sellThreshold,
+					st: (buyThreshold-10),
 					bought: false,
 					sold: false
 				}
@@ -157,27 +153,26 @@ if (!reRun) {
 									}
 								}
 
-								// this sets the sell point to slightly below the buythreshold now that its crossed our gradient scale
-								if (floatPct24Change > buyThreshold+60) {
-									mymarket.st = buyThreshold + 55;
+								if (floatPct24Change >= buyThreshold+10) {
+									mymarket.st = Math.max(mymarket.st, buyThreshold);
 								}
-								else if (floatPct24Change > buyThreshold+50) {
-									mymarket.st = buyThreshold + 45;
+								if (floatPct24Change >= buyThreshold+20) {
+									mymarket.st = Math.max(mymarket.st, (buyThreshold+10));
 								}
-								else if (floatPct24Change > buyThreshold+40) {
-									mymarket.st = buyThreshold + 35;
+								if (floatPct24Change >= buyThreshold+30) {
+									mymarket.st = Math.max(mymarket.st, (buyThreshold+20));
 								}
-								else if (floatPct24Change > buyThreshold+30) {
-									mymarket.st = buyThreshold + 20;
+								if (floatPct24Change >= buyThreshold+40) {
+									mymarket.st = Math.max(mymarket.st, (buyThreshold+35));
 								}
-								else if (floatPct24Change > buyThreshold+20) {
-									mymarket.st = buyThreshold + 10;
+								if (floatPct24Change >= buyThreshold+50) {
+									mymarket.st = Math.max(mymarket.st, (buyThreshold+45));
 								}
-								else if (floatPct24Change > buyThreshold+10) {
-									mymarket.st = buyThreshold;
+								if (floatPct24Change >= buyThreshold+60) {
+									mymarket.st = Math.max(mymarket.st, (buyThreshold+55));
 								}
 
-								if ((floatPct24Change >= mymarket.st) && mymarket.bought && !mymarket.sold) {
+								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
 									sellMarket(mymarket,timestamp);
 								}
 								// need to rething sell
@@ -483,7 +478,7 @@ function printJson() {
 		topMarketsJson.push(query);
 	}
 
-	var historyname = 'b'+buyThreshold+'s'+sellThreshold+'c'+ceilingThreshold+'l'+lossThreshold;
+	var historyname = 'b'+buyThreshold;
 
 	jsonfile.writeFileSync(`${historyname}_history.json`, topMarketsJson);
 }
