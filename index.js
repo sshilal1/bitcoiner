@@ -84,12 +84,13 @@ if (!reRun) {
 				}
 				myMarkets.push(obj);
 
-				initObj[market.MarketName] = market.Last
+				//initObj[market.MarketName] = market.Last
 			}
 		}
 
-		historyArray.push(initObj);
+		//historyArray.push(initObj);
 
+		// Currently just writing empty array on first query.
 		fs.writeFile(historyFileName, JSON.stringify(historyArray), (err) => {
 			if (err) throw err;
 		})
@@ -186,8 +187,8 @@ if (!reRun) {
 									sellMarket(mymarket,timestamp);
 								}*/
 							}
+							thisobj[market.MarketName] = pdiff(market.Last, market.PrevDay);
 						}
-						thisobj[market.MarketName] = market.Last;
 					}
 				}
 				myMarkets.sort(function(a,b) { return b.change - a.change});
@@ -198,7 +199,7 @@ if (!reRun) {
 				var longLeaderString = "Leaders: ";
 				for (let i=0; i<5; i++) {			
 					var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
-					if (i<4) { longLeaderString += leaderStr + " | "; }
+					if (i<3) { longLeaderString += leaderStr + " | "; }
 				}
 				logger.write(longLeaderString);
 
