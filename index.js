@@ -66,7 +66,7 @@ if (!reRun) {
 		}
 
 		for (var market of markets.result) {
-			if (!market.MarketName.includes('ETH')) {
+			if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 				var pctChange = pdiff(market.Last, market.PrevDay);
 				if (pctChange > buyThreshold+5) { neverbuy = true; }
 				else { neverbuy = false; }
@@ -119,7 +119,7 @@ if (!reRun) {
 
 				for (var mymarket of myMarkets) {
 					for (var market of markets.result) {
-						if (!market.MarketName.includes('ETH')) {
+						if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 							if (mymarket.name === market.MarketName) {
 								rank++;
 								var newPctChange = pdiff(market.Last, mymarket["start"]);
