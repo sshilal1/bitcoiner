@@ -155,25 +155,32 @@ if (!reRun) {
 								}
 
 								if (floatPct24Change >= buyThreshold+10) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT10: ${buyThreshold+10}%`);
 									mymarket.st = Math.max(mymarket.st, buyThreshold);
 								}
 								if (floatPct24Change >= buyThreshold+20) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT20: ${buyThreshold+20}%`);
 									mymarket.st = Math.max(mymarket.st, (buyThreshold+10));
 								}
 								if (floatPct24Change >= buyThreshold+30) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT30: ${buyThreshold+30}%`);
 									mymarket.st = Math.max(mymarket.st, (buyThreshold+20));
 								}
 								if (floatPct24Change >= buyThreshold+40) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT40: ${buyThreshold+40}%`);
 									mymarket.st = Math.max(mymarket.st, (buyThreshold+35));
 								}
 								if (floatPct24Change >= buyThreshold+50) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT50: ${buyThreshold+50}%`);
 									mymarket.st = Math.max(mymarket.st, (buyThreshold+45));
 								}
 								if (floatPct24Change >= buyThreshold+60) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT60: ${buyThreshold+60}%`);
 									mymarket.st = Math.max(mymarket.st, (buyThreshold+55));
 								}
 
 								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
+									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} St: ${mymarket.st}%`);
 									sellMarket(mymarket,timestamp);
 								}
 								// need to rething sell
