@@ -29,6 +29,11 @@ var reporter = new logging.log(buyThreshold);
 var errorlogs = new logging.log(buyThreshold);
 reporter.create('report');
 errorlogs.create('error');
+// --------------------
+// Setup Actions
+// --------------------
+const actions = require('./actions');
+var action = new actions.bittrexActions(logger,reporter);
 /****************
 // --------------
 Begin Application
@@ -145,12 +150,12 @@ if (!reRun) {
 									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
 									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										mymarket.bought = true;
-										buyMarket(mymarket,msTime);
+										purchases.push(action.buyMarket(mymarket,timestampthis));
 									}
 									else if (jumper) {
 										mymarket.bought = true;
 										logger.write(`Jumper set for ${mymarket.name}`);
-										buyMarket(mymarket,msTime);
+										purchases.push(action.buyMarket(mymarket,timestampthis));
 									}
 								}
 
@@ -181,7 +186,10 @@ if (!reRun) {
 
 								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
 									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} St: ${mymarket.st}%`);
-									sellMarket(mymarket,timestamp);
+									mymarket.sold = true;
+									var index = _.findIndex(purchases, function(o) { return o.name == mymarket.name; });
+									action.sellMarket(mymarket,timestampthis,purchases[index]);
+									purchases.splice(index,1);
 								}
 								// need to rething sell
 
@@ -281,13 +289,6 @@ else {
 						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
 						mymarket.change = newPctChange;
 						mymarket.last = market.Last;
-
-						for (var purchase of purchases) {
-							if (purchase.name === mymarket.name) {
-								reportOn(newPctChange,mymarket);
-								purchase.change = newPctChange;
-							}
-						}
 
 						var floatPctChange = parseFloat(newPctChange,10);
 						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
