@@ -144,7 +144,7 @@ if (!reRun) {
 
 								var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
 								var buyDip = parseFloat((buyThreshold - floatPct24Change).toFixed(2),10);
-
+								
 								// If the top 2 coins
 								if (rank < 3) {
 									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
@@ -236,7 +236,7 @@ if (!reRun) {
 				logger.write("No Query at " +timestamp);
 			}
 		})
-	},5000);
+	},1000);
 }
 
 else {
