@@ -24,7 +24,7 @@ class bittrexActions {
 	sendEmail(subject,content) {
 		var options = {
 			from: "hearth.bitcoiner.bot@gmail.com",
-			to: "shilale45@gmail.com",
+			to: "shilale45@gmail.com,jbraines20@gmail.com,jonathanpstudwell@gmail.com,justin.c.coppola@gmail.com",
 			subject: subject,
 			text: content
 		};
