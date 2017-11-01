@@ -149,13 +149,13 @@ if (!reRun) {
 								if (rank < 3) {
 									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
 									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
-										mymarket.bought = true;
-										purchases.push(action.buyMarket(mymarket,timestampthis));
+										//mymarket.bought = true;
+										action.buyMarket(mymarket,timestampthis,purchases);
 									}
 									else if (jumper) {
-										mymarket.bought = true;
+										//mymarket.bought = true;
 										logger.write(`Jumper set for ${mymarket.name}`);
-										purchases.push(action.buyMarket(mymarket,timestampthis));
+										action.buyMarket(mymarket,timestampthis,purchases);
 									}
 								}
 
@@ -186,10 +186,7 @@ if (!reRun) {
 
 								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
 									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} St: ${mymarket.st}%`);
-									mymarket.sold = true;
-									var index = _.findIndex(purchases, function(o) { return o.name == mymarket.name; });
-									action.sellMarket(mymarket,timestampthis,purchases[index]);
-									purchases.splice(index,1);
+									action.sellMarket(mymarket,timestampthis,purchases);
 								}
 								// need to rething sell
 
