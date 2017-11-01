@@ -8,7 +8,8 @@ var hrs = function(hours) {
 
 class bittrexActions {
 
-	constructor(logger,reporter) {
+	constructor(logger,reporter,buythreshold) {
+		this.buy = buythreshold;
 		this.logger = logger;
 		this.reporter = reporter;
 		this.transporter = nodemailer.createTransport({
@@ -71,6 +72,45 @@ class bittrexActions {
 		//this.sendEmail(`|**|*Sold ${market.name} *|**|`,content);
 
 		purchases.splice(index,1);
+	}
+
+	// **********************
+	// **** SELL METHODS ****
+	// **********************
+
+	// This method is a sample and just checks if the market is bought, if so, we will sell it
+	testSell(market,time,purchases) {
+		if (market.bought) {
+			this.sellMarket(market,time,purchases);
+		}
+	}
+
+	// This method uses a gradient scale to set a threshold, then checks for dips less than that threshold
+	gradientSell(market,time,purchases) {
+		var buy = parseInt(this.buy,10);
+
+		if (market.change >= buy+10) {
+			market.st = Math.max(market.st, buy);
+		}
+		if (market.change >= buy+20) {
+			market.st = Math.max(market.st, (buy+10));
+		}
+		if (market.change >= buy+30) {
+			market.st = Math.max(market.st, (buy+20));
+		}
+		if (market.change >= buy+40) {
+			market.st = Math.max(market.st, (buy+35));
+		}
+		if (market.change >= buy+50) {
+			market.st = Math.max(market.st, (buy+45));
+		}
+		if (market.change >= buy+60) {
+			market.st = Math.max(market.st, (buy+55));
+		}
+
+		if ((market.change <= market.st) && market.bought && !market.sold) {
+			this.sellMarket(market,time,purchases);
+		}
 	}
 
 	updateSellThreshold(market) {

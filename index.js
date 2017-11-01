@@ -4,7 +4,6 @@
 var buyThreshold = process.argv[2] || 30;
 var reRun = process.argv[3] || false;
 buyThreshold = parseInt(buyThreshold,10);
-//var lowOrStart = process.argv[5] || "start";
 // --------------
 const xl = require('excel4node');
 const jsonfile = require('jsonfile');
@@ -33,7 +32,7 @@ errorlogs.create('error');
 // Setup Actions
 // --------------------
 const actions = require('./actions');
-var action = new actions.bittrexActions(logger,reporter);
+var action = new actions.bittrexActions(logger,reporter,buyThreshold);
 /****************
 // --------------
 Begin Application
@@ -144,7 +143,7 @@ if (!reRun) {
 
 								var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
 								var buyDip = parseFloat((buyThreshold - floatPct24Change).toFixed(2),10);
-								
+
 								// If the top 2 coins
 								if (rank < 3) {
 									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
@@ -159,45 +158,7 @@ if (!reRun) {
 									}
 								}
 
-								if (floatPct24Change >= buyThreshold+10) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT10: ${buyThreshold+10}%`);
-									mymarket.st = Math.max(mymarket.st, buyThreshold);
-								}
-								if (floatPct24Change >= buyThreshold+20) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT20: ${buyThreshold+20}%`);
-									mymarket.st = Math.max(mymarket.st, (buyThreshold+10));
-								}
-								if (floatPct24Change >= buyThreshold+30) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT30: ${buyThreshold+30}%`);
-									mymarket.st = Math.max(mymarket.st, (buyThreshold+20));
-								}
-								if (floatPct24Change >= buyThreshold+40) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT40: ${buyThreshold+40}%`);
-									mymarket.st = Math.max(mymarket.st, (buyThreshold+35));
-								}
-								if (floatPct24Change >= buyThreshold+50) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT50: ${buyThreshold+50}%`);
-									mymarket.st = Math.max(mymarket.st, (buyThreshold+45));
-								}
-								if (floatPct24Change >= buyThreshold+60) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} BT60: ${buyThreshold+60}%`);
-									mymarket.st = Math.max(mymarket.st, (buyThreshold+55));
-								}
-
-								if ((floatPct24Change <= mymarket.st) && mymarket.bought && !mymarket.sold) {
-									//reporter.write(`Coin: ${mymarket.name} %Change: ${floatPct24Change} St: ${mymarket.st}%`);
-									action.sellMarket(mymarket,timestampthis,purchases);
-								}
-								// need to rething sell
-
-								// make it a 2% dip after 100
-
-								/*if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-									sellMarket(mymarket,timestamp);
-								}
-								if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-									sellMarket(mymarket,timestamp);
-								}*/
+								action.gradientSell(mymarket,timestampthis,purchases);
 							}
 							thisobj[market.MarketName] = pdiff(market.Last, market.PrevDay);
 						}
