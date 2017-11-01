@@ -80,7 +80,6 @@ if (!reRun) {
 					last: market.Last,
 					ask: market.Ask,
 					low: market.Low,
-					top: 0,
 					neverbuy: neverbuy,
 					st: (buyThreshold-10),
 					bought: false,
@@ -105,32 +104,28 @@ if (!reRun) {
 	var minutesToRecordAfterBuying = 30;
 	var msAfterBuying = minutesToRecordAfterBuying * 60000;
 	setInterval(function() {
-		bittrex.getmarketsummaries(function(markets) {
-
-			var d = new Date();
-			var timestamp = d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
-			var msTime = d.getTime();
-			var rank = 0;
+		bittrex.getmarketsummaries(function(markets) {			
 
 			if (markets) {
 
-				iteration++;
-				timestampHash[iteration.toString()] = timestamp;
-				var timestampthis = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;
+				var rank = 0;
+				var d = new Date();
+				var timestamp = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;
+				
 				var thisobj = {
-					time : timestampthis
+					time : timestamp
 				}
+
+				myMarkets.sort(function(a,b) { return b.change - a.change});
+				purchases.sort(function(a,b) { return b.change - a.change});
 
 				for (var mymarket of myMarkets) {
 					for (var market of markets.result) {
 						if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 							if (mymarket.name === market.MarketName) {
 								rank++;
-								var newPctChange = pdiff(market.Last, mymarket["start"]);
-								//var twenty4HrChange = pdiff(market.Last, mymarket["low"]);
-								var twenty4HrChange = pdiff(market.Last, market.PrevDay);
-								
-								if (twenty4HrChange > mymarket.change) { mymarket.top = twenty4HrChange; }
+								var pctChange = pdiff(market.Last, market.PrevDay);
+
 								mymarket.change = twenty4HrChange;
 								mymarket.ask = market.Ask;
 								mymarket.low = market.Low;
@@ -138,35 +133,28 @@ if (!reRun) {
 								var jumper = (mymarket.last < buyThreshold-1) && (mymarket.Last > buyThreshold+1);
 								mymarket.last = market.Last;
 								
-								var floatPctChange = parseFloat(newPctChange,10);
 								var floatPct24Change = parseFloat(twenty4HrChange,10);
 
-								var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-								var buyDip = parseFloat((buyThreshold - floatPct24Change).toFixed(2),10);
 
 								// If the top 2 coins
 								if (rank < 3) {
-									//logger.write(`${mymarket.name}\nFirst: ${floatPct24Change > buyThreshold-1}\nSecond: ${floatPct24Change < buyThreshold+1}\nThird: ${!mymarket.neverbuy}\nJumper: ${jumper}`);
 									if ((floatPct24Change > buyThreshold-1) && (floatPct24Change < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
-										//mymarket.bought = true;
-										action.buyMarket(mymarket,timestampthis,purchases);
+										action.buyMarket(mymarket,timestamp,purchases);
 									}
 									else if (jumper) {
-										//mymarket.bought = true;
 										logger.write(`Jumper set for ${mymarket.name}`);
-										action.buyMarket(mymarket,timestampthis,purchases);
+										action.buyMarket(mymarket,timestamp,purchases);
 									}
 								}
 
-								action.gradientSell(mymarket,timestampthis,purchases);
+								action.gradientSell(mymarket,timestamp,purchases);
 							}
 							thisobj[market.MarketName] = pdiff(market.Last, market.PrevDay);
 						}
 					}
 				}
-				myMarkets.sort(function(a,b) { return b.change - a.change});
-				purchases.sort(function(a,b) { return b.change - a.change});
-				console.log(`Time: ${timestamp}`);
+				
+				console.log(`Time: ${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}\t\t`);
 
 				// Leaders interval
 				var longLeaderString = "Leaders: ";
@@ -211,7 +199,6 @@ else {
 					name: thing,
 					start: mfirstQuery[thing],
 					last: mfirstQuery[thing],
-					top: 0,
 					st: false,
 					bought: false,
 					sold: false
@@ -347,21 +334,12 @@ function buyMarket(market,msTime,amount) {
 		change : market.change
 	})
 }
-
-function asyncKickOffBuy(market,ms) {
-	reporter.write(`Buying ${market.name} at ${market.change}%`);
-	var timer = setInterval(buyish, 5000);
-	var sold = false;
-	function buyish() {
-		if (sold) {
-			clearInterval(timer);
-			return;
-		}
-		bittrex.getticker( { market : market.name } ,function(data) {
-			console.log(`Watching ${market.name}...`);
-			console.log(data.result.Last);
-		})
-	}
+// -------------
+// Hours Conversion
+// -------------
+var hrs = function(hours) {
+	var thours = parseInt(hours,10);
+	return thours > 12 ? thours - 12 : thours;
 }
 // -------------
 // Sell function
