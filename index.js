@@ -74,6 +74,7 @@ if (!reRun) {
 				var pctChange = pdiff(market.Last, market.PrevDay);
 				if (pctChange > buyThreshold+5) { neverbuy = true; }
 				else { neverbuy = false; }
+				
 				var obj = {
 					name: market.MarketName,
 					start: market.Last,
@@ -86,12 +87,8 @@ if (!reRun) {
 					sold: false
 				}
 				myMarkets.push(obj);
-
-				//initObj[market.MarketName] = market.Last
 			}
 		}
-
-		//historyArray.push(initObj);
 
 		// Currently just writing empty array on first query.
 		fs.writeFile(historyFileName, JSON.stringify(historyArray), (err) => {
@@ -110,8 +107,7 @@ if (!reRun) {
 
 				var rank = 0;
 				var d = new Date();
-				var timestamp = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;
-				
+				var timestamp = `${d.getHours().toString().padStart(2,0)}${d.getMinutes().toString().padStart(2,0)}${d.getSeconds().toString().padStart(2,0)}`;		
 				var tick = {
 					time : timestamp
 				}
@@ -123,17 +119,16 @@ if (!reRun) {
 					for (var market of markets.result) {
 						if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 							if (mymarket.name === market.MarketName) {
+								
 								rank++;
 								var pctChange = pdiff(market.Last, market.PrevDay);
+								var floatPctChange = parseFloat(pctChange,10);
+								var jumper = (mymarket.last < buyThreshold-1) && (market.Last > buyThreshold+1);
 
 								mymarket.change = pctChange;
 								mymarket.ask = market.Ask;
 								mymarket.low = market.Low;
-
-								var jumper = (mymarket.last < buyThreshold-1) && (mymarket.Last > buyThreshold+1);
 								mymarket.last = market.Last;
-								
-								var floatPctChange = parseFloat(pctChange,10);
 
 								// If the top 2 coins
 								if (rank < 3) {
