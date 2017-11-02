@@ -40,7 +40,7 @@ fs.readdir(dir, function(err, files){
 var parser = jsonlines.parse();
 var reportStr = '';
 parser.on('data', function (data) {
-	if (rerun == 'rerun') {
+	if (rerun) {
 		var regex = /(.+) timestamp:(.*)/g;
 		var match = regex.exec(data.message);
 		var time = match[2];

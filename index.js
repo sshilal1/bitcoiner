@@ -131,7 +131,7 @@ if (!reRun) {
 								mymarket.last = market.Last;
 
 								if (mymarket.bought) {
-									action.gradientSell(mymarket,timestamp,purchases,true);
+									action.gradientSell(mymarket,timestamp,purchases);
 								}
 
 								// If the top 2 coins
