@@ -35,11 +35,21 @@ class bittrexActions {
 		})
 	}
 
-	buyMarket(market,timestamp,purchases) {
-		market.bought = true;
-		var purchaseStr = `Buying ${market.name} at ${market.change}%`;
+	buyMarket(market,timestamp,purchases,rerun) {
+		market.bought = true;	
+		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
+		var content = `${buytime}  ${purchaseStr}`;
+
+		if (!rerun) {
+			var purchaseStr = `Buying ${market.name} at ${market.change}%`;
+		}
+		else {
+			var purchaseStr = `Buying ${market.name} at ${market.change}% timestamp:${buytime}`;
+		}
+
 		this.logger.write(purchaseStr);
 		this.reporter.write(purchaseStr);
+
 		purchases.push({
 			name : market.name,
 			amount : 1,
@@ -48,28 +58,33 @@ class bittrexActions {
 			change : market.change
 		})
 
-		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
-		var content = `${buytime}  ${purchaseStr}`;
-
-		this.sendEmail(`|**|*Bought ${market.name} *|**|`,content);
+		//this.sendEmail(`|**|*Bought ${market.name} *|**|`,content);
 	}
 
-	sellMarket(market,timestamp,purchases) {
+	sellMarket(market,timestamp,purchases,rerun) {
 		market.sold = true;
 		var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
 		var purchase = purchases[index];
-
 		var profit = (market.change - purchase.change).toFixed(2);
-		this.logger.write(`Selling ${market.name} at ${market.change}%`);
-		this.reporter.write(`Selling ${market.name} at ${market.change}%`);
-		this.logger.write(`Profited ${profit}% from ${market.name}`);
-		this.reporter.write(`Profited ${profit}% from ${market.name}`);
-
 		var selltime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}\t\t`;
 		var buytime = `${hrs(purchase.time.substring(0,2))}:${purchase.time.substring(2,4)}:${purchase.time.substring(4,6)}\t\t`;
 		var content = `${buytime}Initial Buy at ${purchase.change}%\n${selltime}Sold ${market.name} at ${market.change}%\nProfited ${profit}%`;
 
-		this.sendEmail(`|**|*Sold ${market.name} *|**|`,content);
+		if (!rerun) {
+			var sellStr = `Selling ${market.name} at ${market.change}%`;
+			var profitStr = `Profited ${profit}% from ${market.name}`;
+		}
+		else {
+			var sellStr = `Selling ${market.name} at ${market.change}% timestamp:${selltime}`;
+			var profitStr = `Profited ${profit}% from ${market.name} timestamp:${selltime}`;
+		}
+
+		this.logger.write(sellStr);
+		this.reporter.write(sellStr);
+		this.logger.write(profitStr);
+		this.reporter.write(profitStr);
+
+		//this.sendEmail(`|**|*Sold ${market.name} *|**|`,content);
 
 		purchases.splice(index,1);
 	}
@@ -90,32 +105,32 @@ class bittrexActions {
 		var buy = parseInt(this.buy,10);
 
 		if (market.change >= buy+10) {
-			if (verbose) { reporter.write(`Hit buy+10: ${market.change}% - Buy: ${buy} - b+10: ${buy+10}`); }
+			if (verbose) { this.reporter.write(`Hit buy+10: ${market.change}% - Buy: ${buy} - b+10: ${buy+10}`); }
 			market.st = Math.max(market.st, buy);
 		}
 		if (market.change >= buy+20) {
-			if (verbose) { reporter.write(`Hit buy+20: ${market.change}% - Buy: ${buy} - b+20: ${buy+20}`); }
+			if (verbose) { this.reporter.write(`Hit buy+20: ${market.change}% - Buy: ${buy} - b+20: ${buy+20}`); }
 			market.st = Math.max(market.st, (buy+10));
 		}
 		if (market.change >= buy+30) {
-			if (verbose) { reporter.write(`Hit buy+30: ${market.change}% - Buy: ${buy} - b+30: ${buy+30}`); }
+			if (verbose) { this.reporter.write(`Hit buy+30: ${market.change}% - Buy: ${buy} - b+30: ${buy+30}`); }
 			market.st = Math.max(market.st, (buy+20));
 		}
 		if (market.change >= buy+40) {
-			if (verbose) { reporter.write(`Hit buy+40: ${market.change}% - Buy: ${buy} - b+40: ${buy+40}`); }
+			if (verbose) { this.reporter.write(`Hit buy+40: ${market.change}% - Buy: ${buy} - b+40: ${buy+40}`); }
 			market.st = Math.max(market.st, (buy+35));
 		}
 		if (market.change >= buy+50) {
-			if (verbose) { reporter.write(`Hit buy+50: ${market.change}% - Buy: ${buy} - b+50: ${buy+50}`); }
+			if (verbose) { this.reporter.write(`Hit buy+50: ${market.change}% - Buy: ${buy} - b+50: ${buy+50}`); }
 			market.st = Math.max(market.st, (buy+45));
 		}
 		if (market.change >= buy+60) {
-			if (verbose) { reporter.write(`Hit buy+60: ${market.change}% - Buy: ${buy} - b+60: ${buy+60}`); }
+			if (verbose) { this.reporter.write(`Hit buy+60: ${market.change}% - Buy: ${buy} - b+60: ${buy+60}`); }
 			market.st = Math.max(market.st, (buy+55));
 		}
 
 		if ((market.change <= market.st) && market.bought && !market.sold) {
-			if (verbose) { reporter.write(`Threshold: ${market.st}, ${market.change}%`); }
+			if (verbose) { this.reporter.write(`Threshold: ${market.st}, ${market.change}%`); }
 			this.sellMarket(market,time,purchases);
 		}
 	}

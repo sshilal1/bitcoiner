@@ -130,14 +130,16 @@ if (!reRun) {
 								mymarket.low = market.Low;
 								mymarket.last = market.Last;
 
-								action.gradientSell(mymarket,timestamp,purchases,true);
+								if (mymarket.bought) {
+									action.gradientSell(mymarket,timestamp,purchases,true);
+								}
 
 								// If the top 2 coins
 								if (rank < 20) {
 									if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										action.buyMarket(mymarket,timestamp,purchases);
 									}
-									else if (jumper) {
+									else if (jumper && !mymarket.bought) {
 										logger.write(`Jumper set for ${mymarket.name}`);
 										action.buyMarket(mymarket,timestamp,purchases);
 									}
@@ -237,14 +239,16 @@ else {
 
 						mymarket.change = pctChange;
 
-						action.gradientSell(mymarket,timestamp,purchases,true);
+						if (mymarket.bought) {
+							action.gradientSell(mymarket,timestamp,purchases,true);
+						}
 
 						// If the top 2 coins
 						if (rank < 20) {
 							if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 								action.buyMarket(mymarket,timestamp,purchases);
 							}
-							else if (jumper) {
+							else if (jumper && !mymarket.bought) {
 								logger.write(`Jumper set for ${mymarket.name}`);
 								action.buyMarket(mymarket,timestamp,purchases);
 							}
