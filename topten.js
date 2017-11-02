@@ -1,6 +1,10 @@
 var fs = require('fs');
 const xl = require('excel4node');
-var arr = require('./logs/market-history_b30__10.31.117_14.39.33.json');
+var arr = require('./logs/market-history_b30__11.1.117_23.22.17.json');
+var bought = ['BTC-SYNX','BTC-PART'];
+
+var amountToShow = 10;
+var i_show = amountToShow - 1;
 
 var myArr = [];
 
@@ -16,7 +20,25 @@ for (var market in lastquery) {
 		myArr.push(obj);
 	}
 }
-myArr.sort(function(a,b) { return b.change - a.change});
+
+myArr.sort(function(a,b) { return b.change - a.change });
+
+var finArr = [];
+var myarrlen = myArr.length;
+for (let p=i_show; p<myarrlen; p++) {
+	for (var mark of bought) {
+		if (myArr[p].name == mark) {
+			finArr.push(myArr[p]);
+		}
+	}
+}
+
+var newArr = myArr.slice(0,amountToShow);
+newArr = newArr.concat(finArr);
+
+/*for (let k=0; k<newArr.length; k++) {
+	console.log(newArr[k].name);
+}*/
 
 printData();
 
@@ -30,8 +52,8 @@ function printData() {
 	}
 
 	for (let i=0; i<totalticks; i++) {
-		for (let q=0; q<10; q++) {
-			var myMarket = myArr[q];
+		for (let q=0; q<newArr.length; q++) {
+			var myMarket = newArr[q];
 			ws.cell(1,(q+2)).string(myMarket.name); // write names to top
 
 			for (var market in arr[i]) {
