@@ -228,6 +228,9 @@ else {
 				}
 			}
 
+			myMarkets.sort(function(a,b) { return b.change - a.change});
+			purchases.sort(function(a,b) { return b.change - a.change});
+
 			for (var mymarket of myMarkets) {
 				for (var market of markets) {
 					if (mymarket.name === market.MarketName) {
@@ -256,9 +259,6 @@ else {
 					}
 				}
 			}
-
-			myMarkets.sort(function(a,b) { return b.change - a.change});
-			purchases.sort(function(a,b) { return b.change - a.change});
 
 			// Leaders interval
 			var longLeaderString = "Leaders: ";
