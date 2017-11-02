@@ -86,29 +86,36 @@ class bittrexActions {
 	}
 
 	// This method uses a gradient scale to set a threshold, then checks for dips less than that threshold
-	gradientSell(market,time,purchases) {
+	gradientSell(market,time,purchases,verbose) {
 		var buy = parseInt(this.buy,10);
 
 		if (market.change >= buy+10) {
+			if (verbose) { reporter.write(`Hit buy+10: ${market.change}% - Buy: ${buy} - b+10: ${buy+10}`); }
 			market.st = Math.max(market.st, buy);
 		}
 		if (market.change >= buy+20) {
+			if (verbose) { reporter.write(`Hit buy+20: ${market.change}% - Buy: ${buy} - b+20: ${buy+20}`); }
 			market.st = Math.max(market.st, (buy+10));
 		}
 		if (market.change >= buy+30) {
+			if (verbose) { reporter.write(`Hit buy+30: ${market.change}% - Buy: ${buy} - b+30: ${buy+30}`); }
 			market.st = Math.max(market.st, (buy+20));
 		}
 		if (market.change >= buy+40) {
+			if (verbose) { reporter.write(`Hit buy+40: ${market.change}% - Buy: ${buy} - b+40: ${buy+40}`); }
 			market.st = Math.max(market.st, (buy+35));
 		}
 		if (market.change >= buy+50) {
+			if (verbose) { reporter.write(`Hit buy+50: ${market.change}% - Buy: ${buy} - b+50: ${buy+50}`); }
 			market.st = Math.max(market.st, (buy+45));
 		}
 		if (market.change >= buy+60) {
+			if (verbose) { reporter.write(`Hit buy+60: ${market.change}% - Buy: ${buy} - b+60: ${buy+60}`); }
 			market.st = Math.max(market.st, (buy+55));
 		}
 
 		if ((market.change <= market.st) && market.bought && !market.sold) {
+			if (verbose) { reporter.write(`Threshold: ${market.st}, ${market.change}%`); }
 			this.sellMarket(market,time,purchases);
 		}
 	}
