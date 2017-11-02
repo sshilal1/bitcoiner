@@ -1,48 +1,67 @@
 var fs = require('fs');
 const xl = require('excel4node');
-var arr = require('./logs/market-history_b30__11.1.117_23.22.17.json');
-var bought = ['BTC-SYNX','BTC-PART'];
+const _ = require('lodash');
+var jsonlines = require('jsonlines');
 
-var amountToShow = 10;
-var i_show = amountToShow - 1;
+var filename = 'b15__11.2.117_13.31.56';
 
-var myArr = [];
+var reportpath = './logs/' + filename + '_report.log';
+var arr = require('./logs/market-history_' + filename + '.json');
 
-var arrlen = arr.length;
-var lastquery = arr[arrlen-1];
+var bought = [];
+var parser = jsonlines.parse();
+var reportStr = '';
 
-for (var market in lastquery) {
-	if (market != 'time') {
-		var obj = {
-			name : market,
-			change : lastquery[market]
+fs.readFile(reportpath, 'utf8', function (err, data) {
+	if (err) throw err;
+	parser.write(data);
+
+	var amountToShow = 10;
+	var i_show = amountToShow - 1;
+
+	var myArr = [];
+	var arrlen = arr.length;
+	var lastquery = arr[arrlen-1];
+
+	for (var market in lastquery) {
+		if (market != 'time') {
+			var obj = {
+				name : market,
+				change : lastquery[market]
+			}
+			myArr.push(obj);
 		}
-		myArr.push(obj);
 	}
-}
 
-myArr.sort(function(a,b) { return b.change - a.change });
+	myArr.sort(function(a,b) { return b.change - a.change });
 
-var finArr = [];
-var myarrlen = myArr.length;
-for (let p=i_show; p<myarrlen; p++) {
-	for (var mark of bought) {
-		if (myArr[p].name == mark) {
-			finArr.push(myArr[p]);
+	var finArr = [];
+	var myarrlen = myArr.length;
+	for (let p=i_show; p<myarrlen; p++) {
+		for (var mark of bought) {
+			if (myArr[p].name == mark) {
+				finArr.push(myArr[p]);
+			}
 		}
 	}
-}
 
-var newArr = myArr.slice(0,amountToShow);
-newArr = newArr.concat(finArr);
+	var newArr = myArr.slice(0,amountToShow);
+	newArr = newArr.concat(finArr);
+	newArr = _.uniqBy(newArr, 'name');
 
-/*for (let k=0; k<newArr.length; k++) {
-	console.log(newArr[k].name);
-}*/
+	printData(newArr);
+});
 
-printData();
+parser.on('data', function (data) {
+	var regex = /(BTC-\w+)/g;
+	var match = regex.exec(data.message);
+	if (match != null) {
+		//console.log(match[0]);
+		bought.push(match[0]);
+	}
+})
 
-function printData() {
+function printData(newArr) {
 	var wb = new xl.Workbook();
 	var ws = wb.addWorksheet('Sheet 1');
 
