@@ -61,7 +61,7 @@ class bittrexActions {
 		//this.sendEmail(`|**|*Bought ${market.name} *|**|`,content);
 	}
 
-	sellMarket(market,timestamp,purchases,rerun) {
+	sellMarket(market,timestamp,purchases,amount,rerun) {
 		market.sold = true;
 		var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
 		var purchase = purchases[index];
@@ -96,7 +96,7 @@ class bittrexActions {
 	// This method is a sample and just checks if the market is bought, if so, we will sell it
 	testSell(market,time,purchases) {
 		if (market.bought) {
-			this.sellMarket(market,time,purchases);
+			this.sellMarket(market,time,purchases,1);
 		}
 	}
 
@@ -131,13 +131,68 @@ class bittrexActions {
 
 		if ((market.change <= market.st) && market.bought && !market.sold) {
 			if (verbose) { this.reporter.write(`Threshold: ${market.st}, ${market.change}%`); }
-			this.sellMarket(market,time,purchases);
+			this.sellMarket(market,time,purchases,1);
 		}
 	}
 
-	updateSellThreshold(market) {
-		console.log("updating st...");
-		market.st = 20;
+	// This method sells different %'s of our purchase based on the scale of the %change
+	counterSell(market,time,purchases,verbose) {
+		var buythreshold = 40;
+		var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
+		var purchase = purchases[index];
+
+		var counter = 100;
+		var totalcoins = purchase.amount;
+
+		while(counter > 0) {
+
+			// this will sell 50% of the coins at a 60% gain -- a 14% effective gain
+			if (market.change > 60 && counter == 100) {
+				counter = 50;
+				totalcoins = totalcoins * .5;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+			// this will sell all of the coins at 0% -- a 29 % effective loss
+			else if (market.change <= 0 && counter == 100) {
+				counter = 0;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+
+			// this will sell half of the remaining coins at 80% -- a 29% effective gain
+			else if (market.change > 80 && counter == 50) {
+				counter = 25;
+				totalcoins = totalcoins * .5;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+			// this will set the new stop loss at 20 -- a 14% effective loss
+			else if (market.change <= 20 && counter == 50) {
+				counter = 0;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+
+			// this will sell 80% of the remaining coins at 100% -- a 43% effective gain
+			else if (market.change > 100 && counter == 25) {
+				counter = 5;
+				totalcoins = totalcoins * .8;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+			// this will set the new stop loss at 40 -- a 0% effective loss
+			else if (market.change <= 40 && counter == 25) {
+				counter = 0;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+
+			// this will sell the remaining coins at 120% -- a 57% effective gain
+			else if (market.change > 120 && counter == 5) {
+				counter = 0;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+			// this will set the new stop loss at 40 -- a 14% effective gain
+			else if (market.change <= 60 && counter == 5) {
+				counter = 0;
+				this.sellMarket(market,time,purchases,totalcoins);
+			}
+		}
 	}
 }
 
