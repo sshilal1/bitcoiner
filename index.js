@@ -123,17 +123,17 @@ if (!reRun) {
 								rank++;
 								var pctChange = pdiff(market.Last, market.PrevDay);
 								var floatPctChange = parseFloat(pctChange,10);
-								var jumper = (mymarket.last < buyThreshold-1) && (market.Last > buyThreshold+1);
+								var jumper = (mymarket.change < buyThreshold-1) && (floatPctChange > buyThreshold+1);
 
-								mymarket.change = pctChange;
+								mymarket.change = floatPctChange;
 								mymarket.ask = market.Ask;
 								mymarket.low = market.Low;
 								mymarket.last = market.Last;
 
-								action.gradientSell(mymarket,timestamp,purchases);
+								action.gradientSell(mymarket,timestamp,purchases,true);
 
 								// If the top 2 coins
-								if (rank < 3) {
+								if (rank < 20) {
 									if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										action.buyMarket(mymarket,timestamp,purchases);
 									}
@@ -185,16 +185,16 @@ if (!reRun) {
 }
 
 else {
-	var file = "./logs/market-history_10.24.117__b30s50c7__23-39-42.json";
+	var file = "./logs/market-history_b55__11.1.117_17.14.08.json";
 	jsonfile.readFile(file, function(err, obj) {
 
+		// Populate myMarkets array
 		var mfirstQuery = obj[0];
 		for (var thing in mfirstQuery) {
 			if (thing != 'time') {
 				var myObj = {
 					name: thing,
-					start: mfirstQuery[thing],
-					last: mfirstQuery[thing],
+					change: mfirstQuery[thing],
 					st: false,
 					bought: false,
 					sold: false
@@ -203,58 +203,58 @@ else {
 			}
 		}
 
+		// Main Loop
 		for (var query of obj) {
-			iteration++;
-			// Here is main loop
-			//console.log("loop no:", iteration);
+
+			// Initial variable sets/clears
 			var markets = [];
 			var timestamp;
+			var rank = 0;
 
+			// Populate markets so its as if it were coming from bittrex api
 			for (var row in query) {
 				if (row != 'time') {
 					var obj = {
 						MarketName : row,
-						Last : query[row]
+						Change : query[row]
 					}				
 					markets.push(obj);
 				}
+				// Record timestamp for this query
 				else {
 					timestamp = query[row];
 				}
 			}
 
-			for (var market of markets) {
-				for (var mymarket of myMarkets) {
+			for (var mymarket of myMarkets) {
+				for (var market of markets) {
 					if (mymarket.name === market.MarketName) {
-						var newPctChange = pdiff(market.Last, mymarket["start"]);
-						if (newPctChange > mymarket.change) { mymarket.top = newPctChange; }
-						mymarket.change = newPctChange;
-						mymarket.last = market.Last;
+						
+						rank++;
+						var pctChange = market.Change;
+						var floatPctChange = parseFloat(pctChange,10);
+						var jumper = (mymarket.change < buyThreshold-1) && (floatPctChange > buyThreshold+1);
 
-						var floatPctChange = parseFloat(newPctChange,10);
-						var ceilingDip = parseFloat(mymarket.top,10) - parseFloat(mymarket.change,10);
-						var buyDip = parseFloat((buyThreshold - floatPctChange).toFixed(2));
+						mymarket.change = pctChange;
 
-						if (floatPctChange > sellThreshold) {
-							mymarket.st = true;
-						}
+						action.gradientSell(mymarket,timestamp,purchases,true);
 
-						if ((floatPctChange > buyThreshold) && !mymarket.bought) {
-							mymarket.bought = true;
-							buyMarket(mymarket,timestamp);
-						}
-
-						else if (mymarket.st && (ceilingDip > ceilingThreshold) && mymarket.bought && !mymarket.sold) {
-							sellMarket(mymarket,timestamp);
-						}
-
-						else if ((buyDip > lossThreshold) && mymarket.bought && !mymarket.sold) {
-							sellMarket(mymarket,timestamp);
+						// If the top 2 coins
+						if (rank < 20) {
+							if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
+								action.buyMarket(mymarket,timestamp,purchases);
+							}
+							else if (jumper) {
+								logger.write(`Jumper set for ${mymarket.name}`);
+								action.buyMarket(mymarket,timestamp,purchases);
+							}
 						}
 					}
 				}
 			}
+
 			myMarkets.sort(function(a,b) { return b.change - a.change});
+			purchases.sort(function(a,b) { return b.change - a.change});
 
 			// Leaders interval
 			var longLeaderString = "Leaders: ";
