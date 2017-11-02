@@ -30,8 +30,8 @@ class bittrexActions {
 		};
 
 		this.transporter.sendMail(options, (err,data) => {
-			if (err) { this.reporter.write(err); }
-			else { this.reporter.write("Email sent: " + data.response); }
+			if (err) { this.logger.write(err); }
+			else { this.logger.write("Email sent: " + data.response); }
 		})
 	}
 
@@ -51,7 +51,7 @@ class bittrexActions {
 		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
 		var content = `${buytime}  ${purchaseStr}`;
 
-		//this.sendEmail(`|**|*Bought ${market.name} *|**|`,content);
+		this.sendEmail(`|**|*Bought ${market.name} *|**|`,content);
 	}
 
 	sellMarket(market,timestamp,purchases) {
@@ -69,7 +69,7 @@ class bittrexActions {
 		var buytime = `${hrs(purchase.time.substring(0,2))}:${purchase.time.substring(2,4)}:${purchase.time.substring(4,6)}\t\t`;
 		var content = `${buytime}Initial Buy at ${purchase.change}%\n${selltime}Sold ${market.name} at ${market.change}%\nProfited ${profit}%`;
 
-		//this.sendEmail(`|**|*Sold ${market.name} *|**|`,content);
+		this.sendEmail(`|**|*Sold ${market.name} *|**|`,content);
 
 		purchases.splice(index,1);
 	}
