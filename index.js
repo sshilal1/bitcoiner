@@ -83,6 +83,7 @@ if (!reRun) {
 					low: market.Low,
 					neverbuy: neverbuy,
 					st: (buyThreshold-10),
+					count: 100,
 					bought: false,
 					sold: false
 				}
@@ -131,7 +132,7 @@ if (!reRun) {
 								mymarket.last = market.Last;
 
 								if (mymarket.bought) {
-									action.gradientSell(mymarket,timestamp,purchases);
+									action.tieredSell(mymarket,timestamp,purchases);
 								}
 
 								// If the top 2 coins
@@ -187,7 +188,7 @@ if (!reRun) {
 }
 
 else {
-	var file = "./logs/market-history_b55__11.1.117_17.14.08.json";
+	var file = "./logs/market-history_b30__11.2.117_09.31.23.json";
 	jsonfile.readFile(file, function(err, obj) {
 
 		// Populate myMarkets array
@@ -198,6 +199,7 @@ else {
 					name: thing,
 					change: mfirstQuery[thing],
 					st: false,
+					count: 100,
 					bought: false,
 					sold: false
 				}
@@ -243,17 +245,17 @@ else {
 						mymarket.change = pctChange;
 
 						if (mymarket.bought) {
-							action.gradientSell(mymarket,timestamp,purchases,true);
+							action.tieredSell(mymarket,timestamp,purchases);
 						}
 
 						// If the top 2 coins
 						if (rank < 20) {
 							if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
-								action.buyMarket(mymarket,timestamp,purchases);
+								action.buyMarket(mymarket,timestamp,purchases,true);
 							}
 							else if (jumper && !mymarket.bought) {
 								logger.write(`Jumper set for ${mymarket.name}`);
-								action.buyMarket(mymarket,timestamp,purchases);
+								action.buyMarket(mymarket,timestamp,purchases,true);
 							}
 						}
 					}

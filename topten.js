@@ -3,7 +3,7 @@ const xl = require('excel4node');
 const _ = require('lodash');
 var jsonlines = require('jsonlines');
 
-var filename = 'b15__11.2.117_13.31.56';
+var filename = 'b30__11.2.117_09.31.23';
 
 var reportpath = './logs/' + filename + '_report.log';
 var arr = require('./logs/market-history_' + filename + '.json');
@@ -82,5 +82,5 @@ function printData(newArr) {
 			}
 		}
 	}
-	wb.write('report.xlsx');
+	wb.write('./logs/' + filename + '_report.xlsx');
 }
