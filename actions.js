@@ -53,7 +53,7 @@ class bittrexActions {
 
 		purchases.push({
 			name : market.name,
-			amount : 1,
+			amount : 100,
 			price : market.last,
 			time : timestamp,
 			change : market.change
@@ -143,10 +143,10 @@ class bittrexActions {
 		var buy = parseInt(this.buy,10);
 		// buy+1, buy-1
 
-		//var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
-		//var purchase = purchases[index];
+		var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
+		var purchase = purchases[index];
 
-		var totalcoins = 100;
+		var totalcoins = purchase.amount;
 
 		// this will sell 50% of the coins at a 60% gain -- a 14% effective gain
 		if (market.change > (buy+20) && market.count == 100) {
