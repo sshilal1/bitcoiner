@@ -38,7 +38,6 @@ class bittrexActions {
 	buyMarket(market,timestamp,purchases,rerun) {
 		market.bought = true;	
 		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
-		var content = `${buytime}  ${purchaseStr}`;
 
 		if (!rerun) {
 			var purchaseStr = `Buying ${market.name} at ${market.change}%`;
@@ -46,6 +45,8 @@ class bittrexActions {
 		else {
 			var purchaseStr = `Buying ${market.name} at ${market.change}% timestamp:${buytime}`;
 		}
+
+		var content = `${buytime}  ${purchaseStr}`;
 
 		this.logger.write(purchaseStr);
 		this.reporter.write(purchaseStr);
