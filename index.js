@@ -152,23 +152,10 @@ if (!reRun) {
 				}
 				
 				console.log(`Time: ${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}\t\t`);
-
 				// Leaders interval
-				var longLeaderString = "Leaders: ";
-				for (let i=0; i<5; i++) {			
-					var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
-					if (i<3) { longLeaderString += leaderStr + " | "; }
-				}
-				logger.write(longLeaderString);
-
+				logger.printLeaders(myMarkets,5);
 				// Bought interval
-				if (purchases.length > 0) {
-					var purchaseStr = "Bought : ";
-					for (var purchase in purchases) {
-						purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
-					}
-					logger.write(purchaseStr);
-				}
+				logger.printBought(myMarkets,purchases);
 
 				// Write data to history file
 				var arr = require(historyFileName);
