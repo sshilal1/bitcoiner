@@ -245,7 +245,7 @@ else {
 						mymarket.change = pctChange;
 
 						if (mymarket.bought) {
-							action.tieredSell(mymarket,timestamp,purchases);
+							action.tieredSell(mymarket,timestamp,purchases,false,true);
 						}
 
 						// If the top 2 coins
