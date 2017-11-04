@@ -89,7 +89,10 @@ class bittrexActions {
 		market.sold = true;
 		var index = _.findIndex(purchases, function(o) { return o.name == market.name; });
 		var purchase = purchases[index];
+
 		purchase.amount = purchase.amount - amount;
+		var sellprice = market.last * .998;
+		//this.sellMarket(market.name,amount,sellprice);
 
 		//var profit = ((market.change / purchase.change) - 1).toFixed(2);
 		var profit = (market.change - purchase.change).toFixed(2);
