@@ -1,5 +1,11 @@
 const _ = require('lodash');
 const nodemailer = require('nodemailer');
+const bittrex = require('node-bittrex-api');
+const api = require('./api');
+bittrex.options({ 
+	'apikey' : api.bittrex.key,
+	'apisecret' : api.bittrex.secret
+});
 
 var hrs = function(hours) {
 	var thours = parseInt(hours,10);
@@ -35,15 +41,30 @@ class bittrexActions {
 		})
 	}
 
+	purchaseMarket(name,amount,rate) {
+		var options = {
+			market: name,
+			quantity: amount,
+			rate: rate
+		}
+
+		bittrex.buylimit(options, function(data) {
+			this.reporter.write(data);
+		})
+	}
+
 	buyMarket(market,timestamp,purchases,rerun) {
 		market.bought = true;	
 		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
 
+		var purchaseprice = market.last * 1.001;
+		var amount = (100 / purchaseprice).toFixed(3);
+
 		if (!rerun) {
-			var purchaseStr = `Buying ${market.name} at ${market.change}%`;
+			var purchaseStr = `Buying '${amount}' coins of '${market.name}' at ${market.change}%`;
 		}
 		else {
-			var purchaseStr = `Buying ${market.name} at ${market.change}% timestamp:${buytime}`;
+			var purchaseStr = `Buying '${amount}' coins of '${market.name}' at ${market.change}% timestamp:${buytime}`;
 		}
 
 		var content = `${buytime}  ${purchaseStr}`;
@@ -51,9 +72,11 @@ class bittrexActions {
 		this.logger.write(purchaseStr);
 		this.reporter.write(purchaseStr);
 
+		//this.purchaseMarket(market.name,amount,purchaseprice);
+
 		purchases.push({
 			name : market.name,
-			amount : 100,
+			amount : amount,
 			price : market.last,
 			time : timestamp,
 			change : market.change
@@ -95,7 +118,7 @@ class bittrexActions {
 	}
 
 	checkNeverBuy(market,rank) {
-		
+
 	}
 
 	// **********************

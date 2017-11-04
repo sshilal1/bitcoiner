@@ -1,7 +1,7 @@
 // --------------
 // User variables
 // --------------
-var buyThreshold = process.argv[2] || 30;
+var buyThreshold = process.argv[2];
 var reRun = process.argv[3] || false;
 buyThreshold = parseInt(buyThreshold,10);
 // --------------
@@ -128,13 +128,13 @@ if (!reRun) {
 				myMarkets.sort(function(a,b) { return b.change - a.change});
 				purchases.sort(function(a,b) { return b.change - a.change});
 
-				for (var market of markets.result) {
+				for (var mymarket of myMarkets) {
+					for (var market of markets.result) {
 
-					if (market.MarketName == 'USDT-BTC') {
-						btcPrice = market.Last;
-					}
+						if (market.MarketName == 'USDT-BTC') {
+							btcPrice = market.Last;
+						}
 
-					for (var mymarket of myMarkets) {
 						if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 							if (mymarket.name === market.MarketName) {
 								
@@ -157,7 +157,7 @@ if (!reRun) {
 								}
 
 								// If the top 2 coins
-								if (rank < 20) {
+								if (rank < 3) {
 									if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 										action.buyMarket(mymarket,timestamp,purchases);
 									}
