@@ -16,6 +16,7 @@ bittrex.options({
 	'apisecret' : api.bittrex.secret
 });
 
+var dontBuyThese = [];
 // --------------------
 // Setup Logging
 // --------------------
@@ -53,6 +54,7 @@ var d = new Date()
 var time = `${d.getHours().toString().padStart(2,0)}.${d.getMinutes().toString().padStart(2,0)}.${d.getSeconds().toString().padStart(2,0)}`;
 var filename = 'b'+buyThreshold+'__'+(d.getMonth()+1)+'.'+d.getDate()+'.'+d.getYear()+'_'+time;
 var historyFileName = './logs/market-history_' + filename + '.json';
+var btcPrice;
 // --------------
 // Initial gather
 // --------------
@@ -70,10 +72,20 @@ if (!reRun) {
 		}
 
 		for (var market of markets.result) {
+
+			if (market.MarketName == 'USDT-BTC') {
+				btcPrice = market.Last;
+			}
+
 			if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 				var pctChange = pdiff(market.Last, market.PrevDay);
-				if (pctChange > buyThreshold+5) { neverbuy = true; }
-				else { neverbuy = false; }
+				
+				if (pctChange > buyThreshold+5 || dontBuyThese.includes(market.MarketName)) { 
+					neverbuy = true;
+				}
+				else {
+					neverbuy = false;
+				}
 				
 				var obj = {
 					name: market.MarketName,
@@ -116,8 +128,13 @@ if (!reRun) {
 				myMarkets.sort(function(a,b) { return b.change - a.change});
 				purchases.sort(function(a,b) { return b.change - a.change});
 
-				for (var mymarket of myMarkets) {
-					for (var market of markets.result) {
+				for (var market of markets.result) {
+
+					if (market.MarketName == 'USDT-BTC') {
+						btcPrice = market.Last;
+					}
+
+					for (var mymarket of myMarkets) {
 						if (!(market.MarketName.includes('ETH') || market.MarketName.includes('USDT'))) {
 							if (mymarket.name === market.MarketName) {
 								
@@ -130,6 +147,10 @@ if (!reRun) {
 								mymarket.ask = market.Ask;
 								mymarket.low = market.Low;
 								mymarket.last = market.Last;
+								mymarket.price = (market.Last * btcPrice);
+
+								// Anything that we have not bought, that rises above 40 (buy+10), dont ever
+								action.checkNeverBuy(mymarket,rank);
 
 								if (mymarket.bought) {
 									action.tieredSell(mymarket,timestamp,purchases);
@@ -153,7 +174,7 @@ if (!reRun) {
 				
 				console.log(`Time: ${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}\t\t`);
 				// Leaders interval
-				logger.printLeaders(myMarkets,5);
+				logger.printLeaders(myMarkets,3);
 				// Bought interval
 				logger.printBought(myMarkets,purchases);
 
@@ -175,7 +196,7 @@ if (!reRun) {
 }
 
 else {
-	var file = "./logs/market-history_b30__11.2.117_09.31.23.json";
+	var file = "./logs/market-history_b30__11.4.117_00.35.54.json";
 	jsonfile.readFile(file, function(err, obj) {
 
 		// Populate myMarkets array
@@ -231,12 +252,15 @@ else {
 
 						mymarket.change = pctChange;
 
+						// Anything that we have not bought, that rises above 40 (buy+10), dont ever
+						action.checkNeverBuy(mymarket,rank);
+
 						if (mymarket.bought) {
 							action.tieredSell(mymarket,timestamp,purchases,false,true);
 						}
 
 						// If the top 2 coins
-						if (rank < 20) {
+						if (rank < 3) {
 							if ((floatPctChange > buyThreshold-1) && (floatPctChange < buyThreshold+1) && !mymarket.bought && !mymarket.neverbuy) {
 								action.buyMarket(mymarket,timestamp,purchases,true);
 							}
@@ -249,7 +273,7 @@ else {
 				}
 			}
 
-			// Leaders interval
+			/*// Leaders interval
 			var longLeaderString = "Leaders: ";
 			for (let i=0; i<5; i++) {			
 				var leaderStr = `${myMarkets[i].change}% - ${myMarkets[i].name}`;	
@@ -264,7 +288,7 @@ else {
 					purchaseStr += `${purchases[purchase].change}% - ${purchases[purchase].name} | `;
 				}
 				logger.write(purchaseStr);
-			}
+			}*/
 		}
 	})
 }
