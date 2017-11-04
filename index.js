@@ -150,7 +150,7 @@ if (!reRun) {
 								mymarket.price = (market.Last * btcPrice);
 
 								// Anything that we have not bought, that rises above 40 (buy+10), dont ever
-								action.checkNeverBuy(mymarket,rank);
+								//action.checkNeverBuy(mymarket,rank);
 
 								if (mymarket.bought) {
 									action.tieredSell(mymarket,timestamp,purchases);
@@ -253,7 +253,7 @@ else {
 						mymarket.change = pctChange;
 
 						// Anything that we have not bought, that rises above 40 (buy+10), dont ever
-						action.checkNeverBuy(mymarket,rank);
+						//action.checkNeverBuy(mymarket,rank);
 
 						if (mymarket.bought) {
 							action.tieredSell(mymarket,timestamp,purchases,false,true);
