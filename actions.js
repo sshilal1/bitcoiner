@@ -53,6 +53,10 @@ class bittrexActions {
 		})
 	}
 
+	sellOrder(name,amount,rate) {
+		
+	}
+
 	buyMarket(market,timestamp,purchases,rerun) {
 		market.bought = true;	
 		var buytime = `${hrs(timestamp.substring(0,2))}:${timestamp.substring(2,4)}:${timestamp.substring(4,6)}`;
