@@ -8,6 +8,7 @@ var filename = 'b30__11.1.117_11.45.30';
 
 var arr = require('./logs/market-history_' + filename + '.json');
 var reportpath = './logs/' + filename + '_report.log';
+var csvpath = './logs/' + filename + '.csv';
 var fields = ['time'];
 
 // --------------
@@ -56,7 +57,7 @@ fs.readFile(reportpath, 'utf8', function (err, data) {
 	// --------------
 	// Write header to file
 	// --------------
-	fs.appendFileSync('testing.csv', `${header}\n`);
+	fs.appendFileSync(csvpath, `${header}\n`);
 	// --------------
 	// Go through loop and write rest to file
 	// --------------
@@ -70,7 +71,7 @@ fs.readFile(reportpath, 'utf8', function (err, data) {
 				linestring += ',';
 			}
 		}
-		fs.appendFileSync('testing.csv', `${linestring}\n`);
+		fs.appendFileSync(csvpath, `${linestring}\n`);
 	}
 	// --------------
 	// --------------
